@@ -40,11 +40,14 @@ public class UserAccount {
     private UserStatus status;
 
     @CreationTimestamp
-    @Column(updatable = false)
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
     @UpdateTimestamp
     private LocalDateTime updatedAt;
+
+    @Column(columnDefinition = "TEXT")
+    private String storeDescription;
 
     public String getFullName() {
         return firstName + " " + lastName;
