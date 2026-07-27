@@ -1,4 +1,4 @@
-package com.violetCart.violetCart_backend;
+package com.violetCart.backend;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

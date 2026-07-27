@@ -1,4 +1,4 @@
-package com.violetCart.violetCart_backend;
+package com.violetCart.backend;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
