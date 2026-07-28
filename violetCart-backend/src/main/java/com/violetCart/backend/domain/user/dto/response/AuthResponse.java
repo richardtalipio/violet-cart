@@ -1,6 +1,7 @@
 package com.violetCart.backend.domain.user.dto.response;
 
 import com.violetCart.backend.domain.user.entity.Role;
+import com.violetCart.backend.domain.user.entity.UserStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -18,4 +19,5 @@ public class AuthResponse {
     private String email;
     private String fullName;
     private Role role;
+    private UserStatus userStatus;
 }
