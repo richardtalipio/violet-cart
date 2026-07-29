@@ -31,7 +31,7 @@ public class AuthServiceImpl  implements AuthService{
     @Override
     @Transactional
     public AuthResponse register(RegisterRequest registerRequest) {
-        log.info("Register request : {}", registerRequest);
+        log.info("Register request : {}", registerRequest.toString());
         if(userAccountRepository.existsByEmail(registerRequest.getEmail())){
             throw new BadRequestException("Email address is already in use");
         }
@@ -73,7 +73,7 @@ public class AuthServiceImpl  implements AuthService{
 
     @Override
     public AuthResponse login(LoginRequest loginRequest) {
-        log.info("Login request : {}", loginRequest);
+        log.info("Login request : {}", loginRequest.toString());
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         loginRequest.getEmail(),
