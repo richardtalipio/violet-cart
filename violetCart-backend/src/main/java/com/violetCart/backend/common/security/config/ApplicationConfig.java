@@ -2,6 +2,7 @@ package com.violetCart.backend.common.security.config;
 
 import com.violetCart.backend.domain.user.repository.UserAccountRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -41,5 +42,16 @@ public class ApplicationConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public CommandLineRunner resetAdminPassword(UserAccountRepository userRepository, PasswordEncoder passwordEncoder) {
+        return args -> {
+            userRepository.findByEmail("admin@violetcart.com").ifPresent(user -> {
+                user.setPassword(passwordEncoder.encode("Password123!"));
+                userRepository.save(user);
+                System.out.println("--> Admin password reset successfully to Password123!");
+            });
+        };
     }
 }

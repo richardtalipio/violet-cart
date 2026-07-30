@@ -8,3 +8,4 @@ pluginManagement {
 rootProject.name = 'violetCart'
 
 include 'violetCart-backend'
+include 'violetCart-frontend'

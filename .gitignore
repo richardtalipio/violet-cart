@@ -1,0 +1,17 @@
+# Gradle & Java Build Outputs
+.gradle/
+**/build/
+**/bin/
+**/out/
+
+# Node & Frontend Build Outputs
+**/node_modules/
+**/dist/
+**/.vite/
+
+# IDE & OS Files
+.idea/
+.vscode/
+*.swp
+*.DS_Store
+*.log

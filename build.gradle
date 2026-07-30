@@ -1,0 +1,61 @@
+plugins {
+    id 'org.springframework.boot' version '3.4.2' apply false
+    id 'io.spring.dependency-management' version '1.1.7' apply false
+    id 'com.github.node-gradle.node' version '7.0.2' apply false
+}
+
+allprojects {
+    group = 'com.violetCart'
+    version = '0.0.1-SNAPSHOT'
+}
+
+// Configuration for Backend module
+project(':violetCart-backend') {
+    apply plugin: 'java'
+    apply plugin: 'org.springframework.boot'
+    apply plugin: 'io.spring.dependency-management'
+
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(21)
+        }
+    }
+
+    repositories {
+        mavenCentral()
+    }
+}
+
+// Configuration for Frontend module
+project(':violetCart-frontend') {
+    apply plugin: 'base'
+    apply plugin: 'com.github.node-gradle.node'
+
+    node {
+        version = '20.18.0' // 👈 Updated from 20.11.0 to support Vite 8 / Rolldown
+        download = true
+        nodeProjectDir = file("${projectDir}")
+    }
+
+    npmInstall {
+        nodeModulesOutputFilter {
+            exclude 'node_modules/.bin/**'
+        }
+    }
+
+    task buildFrontend(type: NpmTask) {
+        dependsOn npmInstall
+        args = ['run', 'build']
+    }
+
+    task cleanFrontend(type: Delete) {
+        delete 'dist'
+    }
+
+    task dev {
+        dependsOn ':violetCart-backend:bootRun', ':violetCart-frontend:npm_run_dev'
+    }
+
+    build.dependsOn buildFrontend
+    clean.dependsOn cleanFrontend
+}
