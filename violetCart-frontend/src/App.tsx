@@ -1,17 +1,10 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { Login } from './pages/Login';
+import { BrowserRouter } from 'react-router-dom';;
+import {AppRoutes} from "./routes/AppRoutes.tsx";
 
 export function App() {
   return (
       <BrowserRouter>
-        <Routes>
-          {/* Render Login as default page */}
-          <Route path="/" element={<Login />} />
-          <Route path="/login" element={<Login />} />
-
-          {/* Fallback route */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        <AppRoutes />
       </BrowserRouter>
   );
 }

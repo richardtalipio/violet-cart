@@ -3,8 +3,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate } from 'react-router-dom';
 import { AxiosError } from 'axios';
-import { loginSchema } from '../schemas/authSchemas'; // 👈 Value import
-import type { LoginFormData } from '../schemas/authSchemas'; // 👈 Type-only import
+import { loginSchema } from '../schemas/authSchemas';
+import type { LoginFormData } from '../schemas/authSchemas';
 import { authService } from '../api/authService';
 import { useAuthStore } from '../store/useAuthStore';
 import type { ApiResponse } from '../types/auth';
@@ -35,9 +35,21 @@ export const useLoginForm = () => {
 
             // Store auth session in Zustand
             setAuth(token, { id: 0, email, firstName: '', lastName: '', role, status });
+            console.log(role);
+            setTimeout(() => {
+                if (role === 'ROLE_ADMIN') {
+                    console.log("TESTING");
+                    navigate('/admin', { replace: true })
+                } else if (role === 'ROLE_SELLER') {
+                    navigate('/seller');
+                } else if (role === 'ROLE_CUSTOMER') {
+                    navigate('/customer');
+                } else {
+                    navigate('/');
+                }
+            }, 0);
 
-            // Redirect to dashboard on success
-            navigate('/dashboard');
+
         } catch (err) {
             const error = err as AxiosError<ApiResponse<null>>;
 
