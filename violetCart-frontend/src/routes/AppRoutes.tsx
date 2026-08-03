@@ -6,6 +6,7 @@ import Admin from "../pages/Admin.tsx";
 import {ProtectedRoute} from "./ProtectedRoute";
 import Customer from "../pages/Customer.tsx";
 import Seller from "../pages/Seller.tsx";
+import Register from "../pages/Register.tsx";
 
 export function AppRoutes(): React.JSX.Element {
     return (
@@ -13,6 +14,7 @@ export function AppRoutes(): React.JSX.Element {
             {/* Public Routes */}
             <Route path="/" element={<Login/>} />
             <Route path="/login" element={<Login/>} />
+            <Route path="/register" element={<Register/>} />
 
             <Route element={<ProtectedRoute requiredRole="ROLE_ADMIN" />}>
                 <Route path="/admin" element={<Admin />} />

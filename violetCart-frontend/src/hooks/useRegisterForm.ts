@@ -1,53 +1,50 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useNavigate } from 'react-router-dom';
 import { AxiosError } from 'axios';
-import { loginSchema } from '../schemas/authSchemas';
-import type { LoginFormData } from '../schemas/authSchemas';
 import { authService } from '../api/authService';
-import { useAuthStore } from '../store/useAuthStore';
 import type { ApiResponse } from '../types/auth';
+import {type RegisterFormData, registerSchema} from "../schemas/authSchemas.ts";
 
-export const useLoginForm = () => {
+export const useRegisterForm = () => {
     const [serverError, setServerError] = useState<string | null>(null);
-    const setAuth = useAuthStore((state) => state.setAuth);
-    const navigate = useNavigate();
+    const [successMsg, setSuccessMsg] = useState<string | null>(null);
+    const [loading, setLoading] = useState<boolean>(false);
 
     const {
         register,
         handleSubmit,
-        formState: { errors, isSubmitting },
-    } = useForm<LoginFormData>({
-        resolver: zodResolver(loginSchema),
+        watch,
+        reset,
+        formState: { errors },
+    } = useForm<RegisterFormData>({
+        resolver: zodResolver(registerSchema),
         defaultValues: {
+            firstName: '',
+            lastName: '',
+            role: 'ROLE_CUSTOMER',
             email: '',
             password: '',
+            storeDescription: ''
         },
     });
 
-    const onSubmit = async (data: LoginFormData) => {
+    const password = watch('password');
+    const onSubmit = async (data: RegisterFormData) => {
         try {
-            setServerError(null);
-            const response = await authService.login(data);
+            setServerError('');
+            setSuccessMsg('');
+            setLoading(true);
 
-            const { token, email, role, status } = response.data;
+            const response = await authService.register(data);
 
-            // Store auth session in Zustand
-            setAuth(token, { id: 0, email, firstName: '', lastName: '', role, status });
-            console.log(role);
-            if (role === 'ROLE_ADMIN') {
-                console.log("TESTING");
-                navigate('/admin', { replace: true })
-            } else if (role === 'ROLE_SELLER') {
-                navigate('/seller');
-            } else if (role === 'ROLE_CUSTOMER') {
-                navigate('/customer');
+            const apiResponse = response.data;
+            if (apiResponse.role === 'ROLE_SELLER') {
+                setSuccessMsg('Seller application submitted! Your account is pending admin approval.');
             } else {
-                navigate('/');
+                setSuccessMsg('Account created successfully! You can now log in.');
             }
-
-
+            reset();
         } catch (err) {
             const error = err as AxiosError<ApiResponse<null>>;
 
@@ -60,14 +57,19 @@ export const useLoginForm = () => {
             } else {
                 setServerError('An unexpected error occurred.');
             }
+        }finally {
+            setLoading(false);
         }
     };
 
     return {
         register,
+        reset,
+        password,
         handleSubmit: handleSubmit(onSubmit),
         errors,
-        isSubmitting,
         serverError,
+        successMsg,
+        loading
     };
 };
