@@ -29,10 +29,18 @@ export const registerSchema = z
             .string()
             .min(1, 'Password is required')
             .min(6, 'Password must be at least 6 characters'),
+        confirmPassword: z
+            .string()
+            .min(1, 'Password is required')
+            .min(6, 'Password must be at least 6 characters'),
         role: z.enum(['ROLE_CUSTOMER', 'ROLE_SELLER'], {
             errorMap: () => ({ message: 'Please select a valid role' }),
         }),
         storeDescription: z.string().optional(),
+    })
+    .refine((data) => data.password === data.confirmPassword, {
+        message: 'Passwords do not match',
+        path: ['confirmPassword'],
     })
     .refine(
         (data) => {

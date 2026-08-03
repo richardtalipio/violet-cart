@@ -44,14 +44,4 @@ public class ApplicationConfig {
         return new BCryptPasswordEncoder();
     }
 
-    @Bean
-    public CommandLineRunner resetAdminPassword(UserAccountRepository userRepository, PasswordEncoder passwordEncoder) {
-        return args -> {
-            userRepository.findByEmail("admin@violetcart.com").ifPresent(user -> {
-                user.setPassword(passwordEncoder.encode("Password123!"));
-                userRepository.save(user);
-                System.out.println("--> Admin password reset successfully to Password123!");
-            });
-        };
-    }
 }

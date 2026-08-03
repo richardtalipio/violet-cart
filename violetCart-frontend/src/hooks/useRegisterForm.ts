@@ -6,17 +6,19 @@ import { authService } from '../api/authService';
 import type { ApiResponse } from '../types/auth';
 import {type RegisterFormData, registerSchema} from "../schemas/authSchemas.ts";
 
+type Role = 'ROLE_CUSTOMER' | 'ROLE_SELLER';
+
 export const useRegisterForm = () => {
     const [serverError, setServerError] = useState<string | null>(null);
     const [successMsg, setSuccessMsg] = useState<string | null>(null);
-    const [loading, setLoading] = useState<boolean>(false);
 
     const {
         register,
         handleSubmit,
         watch,
         reset,
-        formState: { errors },
+        setValue,
+        formState: { errors, isSubmitting },
     } = useForm<RegisterFormData>({
         resolver: zodResolver(registerSchema),
         defaultValues: {
@@ -30,11 +32,24 @@ export const useRegisterForm = () => {
     });
 
     const password = watch('password');
+    const selectedRole = watch('role') as Role;
+
+    const handleRoleChange = (role: Role) => {
+        reset({
+            firstName: '',
+            lastName: '',
+            email: '',
+            password: '',
+            confirmPassword: '',
+            storeDescription: '',
+            role: role, // Keep the newly selected role
+        });
+    };
+
     const onSubmit = async (data: RegisterFormData) => {
         try {
             setServerError('');
             setSuccessMsg('');
-            setLoading(true);
 
             const response = await authService.register(data);
 
@@ -57,19 +72,18 @@ export const useRegisterForm = () => {
             } else {
                 setServerError('An unexpected error occurred.');
             }
-        }finally {
-            setLoading(false);
         }
     };
 
     return {
         register,
-        reset,
         password,
         handleSubmit: handleSubmit(onSubmit),
         errors,
+        isSubmitting,
         serverError,
         successMsg,
-        loading
+        selectedRole,
+        handleRoleChange
     };
 };
