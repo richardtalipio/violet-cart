@@ -1,21 +1,23 @@
-
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Login } from '../pages/Login';
-import Admin from "../pages/Admin.tsx";
-import {ProtectedRoute} from "./ProtectedRoute";
-import Customer from "../pages/Customer.tsx";
-import Seller from "../pages/Seller.tsx";
-import Register from "../pages/Register.tsx";
+import { Register } from '../pages/Register';
+import Admin from '../pages/Admin';
+import Customer from '../pages/Customer';
+import Seller from '../pages/Seller';
+import { ProtectedRoute } from './ProtectedRoute';
+import { GuestRoute } from './GuestRoute';
 
-export function AppRoutes(): React.JSX.Element {
+export const AppRoutes: React.FC = () => {
     return (
         <Routes>
-            {/* Public Routes */}
-            <Route path="/" element={<Login/>} />
-            <Route path="/login" element={<Login/>} />
-            <Route path="/register" element={<Register/>} />
+            {/* Guest-Only Routes */}
+            <Route element={<GuestRoute />}>
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+            </Route>
 
+            {/* Protected Routes */}
             <Route element={<ProtectedRoute requiredRole="ROLE_ADMIN" />}>
                 <Route path="/admin" element={<Admin />} />
             </Route>
@@ -25,7 +27,9 @@ export function AppRoutes(): React.JSX.Element {
             <Route element={<ProtectedRoute requiredRole="ROLE_CUSTOMER" />}>
                 <Route path="/customer" element={<Customer />} />
             </Route>
-            <Route path="*" element={<Navigate to="/" replace />} />
+
+            {/* Default Catch-all */}
+            <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
     );
-}
+};

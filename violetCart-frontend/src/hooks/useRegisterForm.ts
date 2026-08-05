@@ -17,7 +17,6 @@ export const useRegisterForm = () => {
         handleSubmit,
         watch,
         reset,
-        setValue,
         formState: { errors, isSubmitting },
     } = useForm<RegisterFormData>({
         resolver: zodResolver(registerSchema),
