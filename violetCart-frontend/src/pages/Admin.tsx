@@ -43,26 +43,6 @@ const GATEWAYS = [
     { name: 'COD', status: 'Operational', latency: '—', uptime: '100%' },
 ]
 
-const ACTIVITY = [
-    { user: 'Juan dela Cruz', action: 'submitted seller application', time: '3m ago', type: 'seller' },
-    { user: 'Maria Santos', action: 'filed a report on Seller #4821', time: '15m ago', type: 'report' },
-    { user: 'System', action: 'automated payout batch processed', time: '42m ago', type: 'system' },
-    { user: 'Carlo Reyes', action: 'account flagged for review', time: '1h ago', type: 'flag' },
-    { user: 'Ana Lim', action: 'seller evaluation approved', time: '2h ago', type: 'seller' },
-    { user: 'System', action: 'daily backup completed', time: '3h ago', type: 'system' },
-    { user: 'Benj Ocampo', action: 'submitted seller application', time: '5h ago', type: 'seller' },
-    { user: 'Rosa Villanueva', action: 'filed a report on Order #9934', time: '7h ago', type: 'report' },
-    { user: 'System', action: 'fraud detection scan passed', time: '9h ago', type: 'system' },
-    { user: 'Diego Marcos', action: 'seller evaluation declined', time: '1d ago', type: 'flag' },
-]
-
-const ACTIVITY_COLORS: Record<string, string> = {
-    seller: 'bg-[#6366f1]',
-    report: 'bg-[#f87171]',
-    system: 'bg-[#6b7280]',
-    flag: 'bg-[#fbbf24]',
-}
-
 const GATEWAY_STATUS_STYLE: Record<string, { color: string; bg: string }> = {
     Operational: { color: '#34d399', bg: 'rgba(52,211,153,0.12)' },
     Degraded: { color: '#fbbf24', bg: 'rgba(251,191,36,0.12)' },
@@ -353,12 +333,6 @@ const BoxIcon: React.FC<IconProps> = ({ size = 16, active = false }) => {
     )
 }
 
-const BellIcon: React.FC<IconProps> = ({ size = 16, active = false }) => (
-    <svg width={size} height={size} viewBox="0 0 16 16" fill="none">
-        <path d="M8 1a5 5 0 00-5 5v3l-1.5 2h13L13 9V6a5 5 0 00-5-5z" stroke={active ? 'var(--color-accent)' : 'currentColor'} strokeWidth="1.4" strokeLinejoin="round" />
-        <path d="M6.5 13a1.5 1.5 0 003 0" stroke={active ? 'var(--color-accent)' : 'currentColor'} strokeWidth="1.4" strokeLinecap="round" />
-    </svg>
-)
 
 const NAV_ITEMS = [
     { icon: GridIcon, label: 'Dashboard' },
