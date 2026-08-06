@@ -1,13 +1,21 @@
 import React, {useState} from "react";
-import { LayoutGrid, Store, Box, User } from 'lucide-react';
+import { LayoutGrid, Store, Box, User, LogOut } from 'lucide-react';
 import {DashboardTab} from "./dashboard/DashboardTab.tsx";
 import {CustomerTab} from './customer/CustomerTab.tsx';
 import {SellerTab} from './seller/SellerTab.tsx';
 import {ProductTab} from "./product/ProductTab.tsx";
-import styles from '../../css/admin.module.css'
+import {useAuthStore} from "../../store/useAuthStore.ts";
+import {useNavigate} from "react-router-dom";
 
 export const Admin: React.FC = () => {
     const [activeNav, setActiveNav] = useState('Dashboard')
+    const logout = useAuthStore((state) => state.logout);
+    const navigate = useNavigate();
+
+    const handleLogout = () => {
+        logout();
+        navigate('/login', { replace: true });
+    };
 
     const renderContent = () => {
         switch (activeNav) {
@@ -18,7 +26,6 @@ export const Admin: React.FC = () => {
             case 'Customer':
                 return <CustomerTab />
             case 'Product':
-                // Optional placeholder or fallback for Product tab
                return  <ProductTab/>
             default:
                 return < DashboardTab/>
@@ -77,18 +84,29 @@ export const Admin: React.FC = () => {
 
                 {/* Admin user */}
                 <div className="px-4 py-4 border-t flex items-center gap-3 shrink-0" style={{ borderColor: 'var(--color-border)' }}>
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold shrink-0" style={{ background: 'var(--color-accent)', color: 'white' }}>VC</div>
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold shrink-0" style={{ background: 'var(--color-accent)', color: 'white' }}>RA</div>
                     <div className="min-w-0">
                         <p className="text-xs font-medium truncate" style={{ color: 'var(--color-text)' }}>Admin</p>
-                        <p className="text-xs truncate" style={{ color: 'var(--color-muted)', fontFamily: 'var(--font-mono)' }}>violet cart</p>
+                        <p className="text-xs truncate" style={{ color: 'var(--color-muted)', fontFamily: 'var(--font-mono)' }}>Richard Alipio</p>
                     </div>
                 </div>
+
+                <button
+                    onClick={handleLogout}
+                    className="p-2 rounded-lg transition-colors flex items-center justify-center shrink-0"
+                    style={{ color: 'var(--color-muted)', background: 'var(--color-surface-2)' }}
+                    title="Log out"
+                >
+                    <LogOut size={14} />
+                </button>
+
             </aside>
 
             <div className="flex flex-col flex-1 min-w-0 h-full overflow-hidden">
                 <div>
-                    <p className="text-xs mt-0.5" style={{ color: 'var(--color-muted)' }}>Wednesday, August 5, 2026</p>
+                    <p className="text-xs mt-0.5 text-center p-2.5" style={{ color: 'var(--color-muted)' }}>Wednesday, August 5, 2026</p>
                 </div>
+
                 <main className="flex-1 overflow-y-auto">
                     {renderContent()}
                 </main>

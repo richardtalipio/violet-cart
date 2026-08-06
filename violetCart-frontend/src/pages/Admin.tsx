@@ -1,5 +1,4 @@
 import React, { useState } from 'react'
-import styles from '../css/admin.module.css'
 
 interface IconProps {
     size?: number
@@ -288,6 +287,7 @@ const App: React.FC = () => {
                         </div>
                     </div>
                 </main>
+
             </div>
         </div>
     )
