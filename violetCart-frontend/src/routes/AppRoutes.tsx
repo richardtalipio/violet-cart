@@ -2,11 +2,11 @@ import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Login } from '../pages/Login';
 import { Register } from '../pages/Register';
-import Customer from '../pages/Customer';
+import {Customer} from '../components/storefront/Customer';
 import Seller from '../pages/Seller';
 import { ProtectedRoute } from './ProtectedRoute';
 import { GuestRoute } from './GuestRoute';
-import { Admin } from '../components/admin/Admin.tsx';
+import { Admin } from '../components/admin/Admin';
 export const AppRoutes: React.FC = () => {
     return (
         <Routes>

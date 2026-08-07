@@ -1,10 +1,10 @@
 import React, {useState} from "react";
-import { LayoutGrid, Store, Box, User, LogOut } from 'lucide-react';
+import { LayoutGrid, Store, Box, User } from 'lucide-react';
 import {DashboardTab} from "./dashboard/DashboardTab.tsx";
 import {CustomerTab} from './customer/CustomerTab.tsx';
 import {SellerTab} from './seller/SellerTab.tsx';
 import {ProductTab} from "./product/ProductTab.tsx";
-import {useAuthStore} from "../../store/useAuthStore.ts";
+import {useAuthStore} from "@/store/useAuthStore.ts";
 import {useNavigate} from "react-router-dom";
 
 export const Admin: React.FC = () => {
@@ -93,11 +93,15 @@ export const Admin: React.FC = () => {
 
                 <button
                     onClick={handleLogout}
-                    className="p-2 rounded-lg transition-colors flex items-center justify-center shrink-0"
-                    style={{ color: 'var(--color-muted)', background: 'var(--color-surface-2)' }}
-                    title="Log out"
+                    className="px-3 py-2 rounded-xl text-xs font-medium border transition-all hover:opacity-80"
+                    style={{
+                        background: 'rgba(248,113,113,0.12)',
+                        color: 'var(--color-danger)',
+                        borderColor: 'rgba(248,113,113,0.2)',
+                        fontFamily: 'var(--font-display)',
+                    }}
                 >
-                    <LogOut size={14} />
+                    Logout
                 </button>
 
             </aside>
