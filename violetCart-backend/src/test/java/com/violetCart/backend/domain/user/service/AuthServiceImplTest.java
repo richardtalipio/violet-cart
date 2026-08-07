@@ -6,8 +6,10 @@ import com.violetCart.backend.domain.user.dto.request.LoginRequest;
 import com.violetCart.backend.domain.user.dto.request.RegisterRequest;
 import com.violetCart.backend.domain.user.dto.response.AuthResponse;
 import com.violetCart.backend.domain.user.entity.Role;
+import com.violetCart.backend.domain.user.entity.StoreProfile;
 import com.violetCart.backend.domain.user.entity.UserAccount;
 import com.violetCart.backend.domain.user.entity.UserStatus;
+import com.violetCart.backend.domain.user.repository.StoreProfileRepository;
 import com.violetCart.backend.domain.user.repository.UserAccountRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -34,6 +36,9 @@ public class AuthServiceImplTest {
 
     @Mock
     private UserAccountRepository userAccountRepository;
+
+    @Mock
+    private StoreProfileRepository storeProfileRepository;
 
     @Mock
     private PasswordEncoder passwordEncoder;
@@ -66,6 +71,7 @@ public class AuthServiceImplTest {
         sellerRegisterRequest.setEmail("seller@example.com");
         sellerRegisterRequest.setPassword("Password123!");
         sellerRegisterRequest.setRole(Role.ROLE_SELLER);
+        sellerRegisterRequest.setStoreName("John Smith Store");
         sellerRegisterRequest.setStoreDescription("Custom Keyboards Store");
 
         loginRequest = new LoginRequest();
@@ -117,10 +123,10 @@ public class AuthServiceImplTest {
                 .password("hashedPassword")
                 .role(Role.ROLE_SELLER)
                 .status(UserStatus.PENDING_APPROVAL)
-                .storeDescription(sellerRegisterRequest.getStoreDescription())
                 .build();
 
         when(userAccountRepository.save(any(UserAccount.class))).thenReturn(savedSeller);
+        when(storeProfileRepository.save(any(StoreProfile.class))).thenReturn(new StoreProfile());
         when(jwtUtils.generateToken(any(UserAccount.class))).thenReturn("mockJwtToken");
 
         AuthResponse response = authService.register(sellerRegisterRequest);

@@ -12,9 +12,4 @@ import java.util.List;
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long> {
 
-    Page<Product> findByActiveTrueAndStatus(ProductStatus status, Pageable pageable);
-
-    List<Product> findBySellerId(Long sellerId);
-
-    long countByActiveTrue();
 }

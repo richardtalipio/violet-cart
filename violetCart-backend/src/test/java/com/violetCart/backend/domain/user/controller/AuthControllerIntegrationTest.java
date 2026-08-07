@@ -40,6 +40,7 @@ class AuthControllerIntegrationTest {
         request.setFirstName("Jane");
         request.setLastName("Doe");
         request.setEmail(uniqueEmail);
+        request.setContactNumber("09175960831");
         request.setPassword("Password123!");
         request.setRole(Role.ROLE_CUSTOMER);
 
@@ -80,16 +81,17 @@ class AuthControllerIntegrationTest {
         String uniqueEmail = "jane." + UUID.randomUUID() + "@example.com";
 
         // 1. Register account
-        RegisterRequest registerReq = new RegisterRequest();
-        registerReq.setFirstName("Jane");
-        registerReq.setLastName("Doe");
-        registerReq.setEmail(uniqueEmail);
-        registerReq.setPassword("Password123!");
-        registerReq.setRole(Role.ROLE_CUSTOMER);
+        RegisterRequest request = new RegisterRequest();
+        request.setFirstName("Jane");
+        request.setLastName("Doe");
+        request.setEmail(uniqueEmail);
+        request.setContactNumber("09175960831");
+        request.setPassword("Password123!");
+        request.setRole(Role.ROLE_CUSTOMER);
 
         mockMvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(registerReq)))
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated());
 
         // 2. Perform login

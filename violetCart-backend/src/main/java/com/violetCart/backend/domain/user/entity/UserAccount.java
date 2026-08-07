@@ -36,6 +36,9 @@ public class UserAccount implements UserDetails {
     @Column(nullable = false)
     private String password;
 
+    @Column(name = "contact_number",nullable = false)
+    private String contactNumber;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private Role role;
@@ -51,12 +54,13 @@ public class UserAccount implements UserDetails {
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
-    @Column(columnDefinition = "TEXT")
-    private String storeDescription;
-
     public String getFullName() {
         return firstName + " " + lastName;
     }
+
+    // --- Bidirectional Relationship to StoreProfile ---
+    @OneToOne(mappedBy = "userAccount", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private StoreProfile storeProfile;
 
     // --- UserDetails Implementations ---
 

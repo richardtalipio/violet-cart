@@ -24,9 +24,16 @@ public class RegisterRequest {
     @Email(message = "Must be a valid email address")
     private String email;
 
+    @NotBlank(message = "Contact Number is required")
+    private String contactNumber;
+
     @NotBlank(message = "Password is required")
     @Size(min = 8, message = "Password must be at least 8 characters")
     private String password;
+
+    @Size(max = 25, message = "Store name cannot exceed 25 characters")
+    private String storeName;
+
 
     @NotNull(message = "Role is required")
     private Role role;

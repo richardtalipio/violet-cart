@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { Product, CartItem } from './types';
-import { STORE_PRODUCTS, CATEGORIES } from './mockData';
+import { STORE_PRODUCTS, CATEGORIES } from '../common/mockData';
 import { ProductGrid } from './ProductGrid';
 import { ProductDetailModal } from './ProductDetailModal';
 import { CartDrawer } from './CartDrawer';

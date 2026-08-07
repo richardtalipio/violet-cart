@@ -11,6 +11,9 @@ export const loginSchema = z.object({
         .min(6, 'Password must be at least 6 characters'),
 });
 
+// Regular expression for standard phone number formats (7-15 digits, allowing +, spaces, and dashes)
+const phoneRegex = /^[0-9+\s-]{7,15}$/;
+
 export const registerSchema = z
     .object({
         firstName: z
@@ -25,23 +28,43 @@ export const registerSchema = z
             .string()
             .min(1, 'Email is required')
             .email('Please enter a valid email address'),
+        contactNumber: z
+            .string()
+            .min(1, 'Contact number is required')
+            .regex(phoneRegex, 'Please enter a valid contact number'),
         password: z
             .string()
             .min(1, 'Password is required')
             .min(6, 'Password must be at least 6 characters'),
         confirmPassword: z
             .string()
-            .min(1, 'Password is required')
+            .min(1, 'Confirm password is required')
             .min(6, 'Password must be at least 6 characters'),
         role: z.enum(['ROLE_CUSTOMER', 'ROLE_SELLER'], {
             errorMap: () => ({ message: 'Please select a valid role' }),
         }),
         storeDescription: z.string().optional(),
+        storeName: z.string().optional(),
     })
     .refine((data) => data.password === data.confirmPassword, {
         message: 'Passwords do not match',
         path: ['confirmPassword'],
     })
+    .refine(
+        (data) => {
+            if (data.role === 'ROLE_SELLER') {
+                return (
+                    data.storeName !== undefined &&
+                    data.storeName.trim().length > 0
+                );
+            }
+            return true;
+        },
+        {
+            message: 'Store name is required for sellers',
+            path: ['storeName'],
+        }
+    )
     .refine(
         (data) => {
             if (data.role === 'ROLE_SELLER') {

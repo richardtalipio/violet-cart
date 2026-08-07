@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { AxiosError } from 'axios';
 import { authService } from '../api/authService';
 import type { ApiResponse } from '../types/auth';
-import {type RegisterFormData, registerSchema} from "../schemas/authSchemas.ts";
+import { type RegisterFormData, registerSchema } from "../schemas/authSchemas.ts";
 
 type Role = 'ROLE_CUSTOMER' | 'ROLE_SELLER';
 
@@ -26,7 +26,10 @@ export const useRegisterForm = () => {
             role: 'ROLE_CUSTOMER',
             email: '',
             password: '',
-            storeDescription: ''
+            confirmPassword: '',
+            storeName: '',
+            contactNumber: '',
+            storeDescription: '',
         },
     });
 
@@ -40,6 +43,8 @@ export const useRegisterForm = () => {
             email: '',
             password: '',
             confirmPassword: '',
+            storeName: '',
+            contactNumber: '',
             storeDescription: '',
             role: role, // Keep the newly selected role
         });

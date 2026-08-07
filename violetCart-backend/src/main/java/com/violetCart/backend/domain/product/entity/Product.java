@@ -1,7 +1,7 @@
 package com.violetCart.backend.domain.product.entity;
 
 import com.violetCart.backend.domain.product.enums.ProductStatus;
-import com.violetCart.backend.domain.user.entity.UserAccount;
+import com.violetCart.backend.domain.user.entity.StoreProfile;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -39,18 +39,15 @@ public class Product {
     @Column(name = "image_url")
     private String imageUrl;
 
+    // Mapped to StoreProfile instead of UserAccount directly
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "seller_id", nullable = false)
-    private UserAccount seller;
+    @JoinColumn(name = "store_profile_id", nullable = false)
+    private StoreProfile storeProfile;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     @Builder.Default
     private ProductStatus status = ProductStatus.ACTIVE;
-
-    @Column(nullable = false)
-    @Builder.Default
-    private boolean active = true;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

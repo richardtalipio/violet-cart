@@ -16,6 +16,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.UUID;
+
 import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -50,17 +52,18 @@ class UserControllerIntegrationTest {
     @Test
     @DisplayName("GET /api/v1/users/me - 200 OK with Valid Token")
     void getCurrentUser_WithToken_Success() throws Exception {
-
-        RegisterRequest registerReq = new RegisterRequest();
-        registerReq.setFirstName("Alice");
-        registerReq.setLastName("Wonderland");
-        registerReq.setEmail("alice@example.com");
-        registerReq.setPassword("Password123!");
-        registerReq.setRole(Role.ROLE_CUSTOMER);
+        String uniqueEmail = "jane." + UUID.randomUUID() + "@example.com";
+        RegisterRequest request = new RegisterRequest();
+        request.setFirstName("Jane");
+        request.setLastName("Doe");
+        request.setEmail(uniqueEmail);
+        request.setContactNumber("09175960831");
+        request.setPassword("Password123!");
+        request.setRole(Role.ROLE_CUSTOMER);
 
         MvcResult registerResult = mockMvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(registerReq)))
+                        .content(objectMapper.writeValueAsString(request)))
                 .andReturn();
 
         String responseJson = registerResult.getResponse().getContentAsString();
@@ -70,7 +73,7 @@ class UserControllerIntegrationTest {
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success", is(true)))
-                .andExpect(jsonPath("$.data.email", is("alice@example.com")))
-                .andExpect(jsonPath("$.data.firstName", is("Alice")));
+                .andExpect(jsonPath("$.data.email", is(uniqueEmail)))
+                .andExpect(jsonPath("$.data.firstName", is("Jane")));
     }
 }
