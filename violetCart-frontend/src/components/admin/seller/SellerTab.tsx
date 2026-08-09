@@ -1,68 +1,103 @@
 import React, { useState } from "react";
-
-
-const SELLERS = [
-    { name: 'Ana Lim', shop: "Ana's Artisan Goods", products: 48, revenue: '₱184,520', reports: 0, status: 'Active', joined: '2024-03-12', email: 'ana.lim@email.com', description: 'Handcrafted artisan goods made from sustainably sourced local materials. Specializing in woven bags, accessories, and home décor that celebrate Filipino craftsmanship.' },
-    { name: 'Benj Ocampo', shop: 'Ocampo Crafts', products: 23, revenue: '₱97,340', reports: 1, status: 'Active', joined: '2024-04-20', email: 'benj.ocampo@email.com', description: 'Traditional woodcraft and handmade furniture from Cebu. Each piece is carved by hand and treated with natural finishes.' },
-    { name: 'Carlo Reyes', shop: 'CR Collectibles', products: 11, revenue: '₱43,210', reports: 4, status: 'Flagged', joined: '2024-05-03', email: 'carlo.reyes@email.com', description: 'Vintage collectibles and rare items sourced from auctions and estate sales. Authenticity of some items has been disputed by buyers.' },
-    { name: 'Diana Flores', shop: 'Flores Home PH', products: 35, revenue: '₱128,900', reports: 0, status: 'Active', joined: '2024-02-18', email: 'diana.flores@email.com', description: 'Modern home living essentials designed for Filipino households. From minimalist décor to functional kitchen tools.' },
-    { name: 'Eduardo Santos', shop: 'EduTech Gadgets', products: 62, revenue: '₱213,750', reports: 2, status: 'Active', joined: '2024-01-09', email: 'edu.santos@email.com', description: 'Affordable tech accessories and educational gadgets for students and professionals. Focused on value-for-money electronics.' },
-    { name: 'Fatima Reyes', shop: 'Fatima Bakehouse', products: 18, revenue: '₱56,430', reports: 0, status: 'Active', joined: '2024-06-01', email: 'fatima.reyes@email.com', description: 'Home-baked pastries and breads made fresh daily. All products are baked to order with no preservatives.' },
-    { name: 'Gilbert Cruz', shop: 'GC Outdoors', products: 29, revenue: '₱89,600', reports: 1, status: 'Active', joined: '2024-05-14', email: 'gilbert.cruz@email.com', description: 'Outdoor and camping gear for adventure enthusiasts. Curated selection of tents, packs, and survival tools.' },
-    { name: 'Hannah Bautista', shop: 'HB Fashion', products: 74, revenue: '₱301,200', reports: 0, status: 'Active', joined: '2023-11-22', email: 'hannah.bautista@email.com', description: 'Trendy and affordable ready-to-wear clothing for women. New collections drop every two weeks inspired by global fashion.' },
-    { name: 'Ivan Mendoza', shop: 'Mendoza Parts', products: 9, revenue: '₱21,800', reports: 3, status: 'Flagged', joined: '2024-07-05', email: 'ivan.mendoza@email.com', description: 'Automotive spare parts and accessories. Several buyers have reported receiving items that did not match the listed specifications.' },
-    { name: 'Jasmine Tan', shop: 'Jasmine Organics', products: 41, revenue: '₱162,450', reports: 0, status: 'Active', joined: '2024-03-30', email: 'jasmine.tan@email.com', description: 'Certified organic skincare and wellness products made from Philippine botanicals. All formulations are dermatologist-tested.' },
-    { name: 'Kevin Garcia', shop: 'KG Electronics', products: 55, revenue: '₱247,000', reports: 1, status: 'Active', joined: '2024-02-02', email: 'kevin.garcia@email.com', description: 'Consumer electronics and smart home devices at competitive prices. Authorized reseller for several regional brands.' },
-    { name: 'Lorna Villanueva', shop: 'Lorna Textiles', products: 33, revenue: '₱110,680', reports: 0, status: 'Pending', joined: '2024-07-28', email: 'lorna.villanueva@email.com', description: 'Handwoven textiles and indigenous fabrics from the Cordillera region. Seller application currently under review for authenticity verification.' },
-]
+import type { Seller } from "@/components/common/types.ts";
+import { useSellerManagement } from "@/hooks/useSellerManagement.ts";
 
 const SELLER_STATUS: Record<string, { color: string; bg: string }> = {
-    Active: { color: '#34d399', bg: 'rgba(52,211,153,0.12)' },
-    Flagged: { color: '#f87171', bg: 'rgba(248,113,113,0.12)' },
-    Pending: { color: '#fbbf24', bg: 'rgba(251,191,36,0.12)' },
-}
-
+    ACTIVE: { color: '#34d399', bg: 'rgba(52,211,153,0.12)' },
+    REJECTED: { color: '#f87171', bg: 'rgba(248,113,113,0.12)' },
+    BANNED: { color: '#f87171', bg: 'rgba(248,113,113,0.12)' },
+    PENDING: { color: '#fbbf24', bg: 'rgba(251,191,36,0.12)' },
+};
 
 export const SellerTab: React.FC = () => {
-    const [sellerSearch, setSellerSearch] = useState('')
-    const [sellerSort, setSellerSort] = useState<{ col: string; dir: 'asc' | 'desc' }>({ col: 'name', dir: 'asc' })
-    const [sellers, setSellers] = useState(SELLERS)
-    const [selectedSeller, setSelectedSeller] = useState<typeof SELLERS[0] | null>(null)
+    const { sellers, updateSellerStatus, loading, error } = useSellerManagement();
+    const [sellerSearch, setSellerSearch] = useState('');
+    const [sellerSort, setSellerSort] = useState<{ col: keyof Seller; dir: 'asc' | 'desc' }>({
+        col: 'fullName',
+        dir: 'asc'
+    });
+    const [selectedSeller, setSelectedSeller] = useState<Seller | null>(null);
 
-    const handleApprove = (name: string) => {
-        setSellers((prev) => prev.map((s) => s.name === name ? { ...s, status: 'Active' } : s))
-        setSelectedSeller((prev) => prev && prev.name === name ? { ...prev, status: 'Active' } : prev)
-    }
+    const handleApprove = async (email: string) => {
+        try {
+            await updateSellerStatus(email, 'ACTIVE');
+            setSelectedSeller(null);
+        } catch (err) {
+            console.error('Approval failed:', err);
+        }
+    };
 
-    const handleReject = (name: string) => {
-        setSellers((prev) => prev.map((s) => s.name === name ? { ...s, status: 'Rejected' } : s))
-        setSelectedSeller(null)
-    }
+    const handleReject = async (email: string) => {
+        try {
+            await updateSellerStatus(email, 'REJECTED');
+            setSelectedSeller(null);
+        } catch (err) {
+            console.error('Rejection failed:', err);
+        }
+    };
 
-    const filteredSellers = sellers.filter(
-        (s) =>
-            s.name.toLowerCase().includes(sellerSearch.toLowerCase()) ||
-            s.shop.toLowerCase().includes(sellerSearch.toLowerCase()),
-    ).sort((a, b) => {
-        const mul = sellerSort.dir === 'asc' ? 1 : -1
-        const av = (a as Record<string, string | number>)[sellerSort.col]
-        const bv = (b as Record<string, string | number>)[sellerSort.col]
-        if (typeof av === 'number' && typeof bv === 'number') return (av - bv) * mul
-        return String(av).localeCompare(String(bv)) * mul
-    })
+    const handleBan = async (email: string) => {
+        try {
+            await updateSellerStatus(email, 'BANNED');
+            setSelectedSeller(null);
+        } catch (err) {
+            console.error('Ban failed:', err);
+        }
+    };
 
-    const handleSellerSort = (col: string) => {
-        setSellerSort((prev) => ({ col, dir: prev.col === col && prev.dir === 'asc' ? 'desc' : 'asc' }))
-    }
+    const handleRestore = async (email: string) => {
+        try {
+            await updateSellerStatus(email, 'ACTIVE');
+            setSelectedSeller(null);
+        } catch (err) {
+            console.error('Restore failed:', err);
+        }
+    };
+
+    const filteredSellers: Seller[] = (Array.isArray(sellers) ? sellers : [])
+        .filter((s) =>
+            s.fullName?.toLowerCase().includes(sellerSearch.toLowerCase()) ||
+            s.storeName?.toLowerCase().includes(sellerSearch.toLowerCase())
+        )
+        .sort((a, b) => {
+            const mul = sellerSort.dir === 'asc' ? 1 : -1;
+            const av = a[sellerSort.col];
+            const bv = b[sellerSort.col];
+
+            if (typeof av === 'number' && typeof bv === 'number') {
+                return (av - bv) * mul;
+            }
+
+            return String(av ?? '').localeCompare(String(bv ?? '')) * mul;
+        });
+
+    const handleSellerSort = (col: keyof Seller) => {
+        setSellerSort((prev) => ({
+            col,
+            dir: prev.col === col && prev.dir === 'asc' ? 'desc' : 'asc'
+        }));
+    };
+
+    const TABLE_COLUMNS: { key: keyof Seller; label: string }[] = [
+        { key: 'fullName', label: 'Name' },
+        { key: 'productCount', label: 'No. of Products' },
+        { key: 'revenue', label: 'Revenue' },
+        { key: 'noOfreports', label: 'No. of Reports' },
+        { key: 'userStatus', label: 'Status' },
+    ];
+
+    if (loading) return <div className="p-5 text-xs text-center">Loading sellers...</div>;
+    if (error) return <div className="p-5 text-xs text-red-500">{error}</div>;
+
     return (
         <main>
             <div className="flex flex-col" style={{ flex: 1 }}>
                 {/* Summary row */}
                 <div className="grid gap-4 mb-5" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
                     {[
-                        { label: 'Total Sellers', value: SELLERS.length },
-                        { label: 'Flagged Sellers', value: SELLERS.filter(s => s.status === 'Flagged').length, warn: true },
-                        { label: 'Pending Approval', value: SELLERS.filter(s => s.status === 'Pending').length },
+                        { label: 'Total Sellers', value: sellers.length },
+                        { label: 'Banned Sellers', value: sellers.filter(s => s.userStatus === 'BANNED').length, warn: true },
+                        { label: 'Pending Approval', value: sellers.filter(s => s.userStatus === 'PENDING').length },
                     ].map((s) => (
                         <div key={s.label} className="rounded-xl p-5 border" style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)' }}>
                             <p className="text-xs font-medium" style={{ color: 'var(--color-muted)' }}>{s.label}</p>
@@ -88,13 +123,7 @@ export const SellerTab: React.FC = () => {
                         <table className="w-full text-xs border-collapse">
                             <thead>
                             <tr style={{ borderBottom: '1px solid var(--color-border)' }}>
-                                {[
-                                    { key: 'name', label: 'Name' },
-                                    { key: 'products', label: 'No. of Products' },
-                                    { key: 'revenue', label: 'Revenue' },
-                                    { key: 'reports', label: 'No. of Reports' },
-                                    { key: 'status', label: 'Status' },
-                                ].map(({ key, label }) => (
+                                {TABLE_COLUMNS.map(({ key, label }) => (
                                     <th
                                         key={key}
                                         onClick={() => handleSellerSort(key)}
@@ -108,40 +137,40 @@ export const SellerTab: React.FC = () => {
                             </thead>
                             <tbody>
                             {filteredSellers.map((s, i) => {
-                                const st = SELLER_STATUS[s.status]
+                                const st = SELLER_STATUS[s.userStatus] ?? SELLER_STATUS['ACTIVE'];
                                 return (
                                     <tr
-                                        key={s.name}
+                                        key={s.email || s.fullName}
                                         onClick={() => setSelectedSeller(s)}
                                         style={{ borderBottom: i < filteredSellers.length - 1 ? '1px solid var(--color-border)' : undefined, background: 'transparent', cursor: 'pointer' }}
                                         onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--color-surface-2)')}
                                         onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
                                     >
                                         <td className="px-5 py-3.5">
-                                            <p className="font-medium" style={{ color: 'var(--color-text)' }}>{s.name}</p>
-                                            <p style={{ color: 'var(--color-muted)', fontFamily: 'var(--font-mono)', fontSize: 10 }}>{s.shop}</p>
+                                            <p className="font-medium" style={{ color: 'var(--color-text)' }}>{s.fullName}</p>
+                                            <p style={{ color: 'var(--color-muted)', fontFamily: 'var(--font-mono)', fontSize: 10 }}>{s.storeName}</p>
                                         </td>
-                                        <td className="px-5 py-3.5" style={{ color: 'var(--color-text)', fontFamily: 'var(--font-mono)' }}>{s.products}</td>
-                                        <td className="px-5 py-3.5" style={{ color: 'var(--color-text)', fontFamily: 'var(--font-mono)' }}>{s.revenue}</td>
+                                        <td className="px-5 py-3.5" style={{ color: 'var(--color-text)', fontFamily: 'var(--font-mono)' }}>{s.productCount}</td>
+                                        <td className="px-5 py-3.5" style={{ color: 'var(--color-text)', fontFamily: 'var(--font-mono)' }}>₱{s.revenue?.toLocaleString() ?? 0}</td>
                                         <td className="px-5 py-3.5">
-                            <span
-                                className="font-medium px-1.5 py-0.5 rounded"
-                                style={{
-                                    fontFamily: 'var(--font-mono)',
-                                    color: s.reports > 2 ? 'var(--color-danger)' : s.reports > 0 ? 'var(--color-warning)' : 'var(--color-muted)',
-                                    background: s.reports > 2 ? 'rgba(248,113,113,0.12)' : s.reports > 0 ? 'rgba(251,191,36,0.12)' : 'transparent',
-                                }}
-                            >
-                              {s.reports}
-                            </span>
+                                            <span
+                                                className="font-medium px-1.5 py-0.5 rounded"
+                                                style={{
+                                                    fontFamily: 'var(--font-mono)',
+                                                    color: s.noOfreports > 2 ? 'var(--color-danger)' : s.noOfreports > 0 ? 'var(--color-warning)' : 'var(--color-muted)',
+                                                    background: s.noOfreports > 2 ? 'rgba(248,113,113,0.12)' : s.noOfreports > 0 ? 'rgba(251,191,36,0.12)' : 'transparent',
+                                                }}
+                                            >
+                                                {s.noOfreports}
+                                            </span>
                                         </td>
                                         <td className="px-5 py-3.5">
-                            <span
-                                className="text-[10px] font-medium px-2 py-0.5 rounded-full"
-                                style={{ color: st.color, background: st.bg }}
-                            >
-                              {s.status}
-                            </span>
+                                            <span
+                                                className="text-[10px] font-medium px-2 py-0.5 rounded-full"
+                                                style={{ color: st.color, background: st.bg }}
+                                            >
+                                                {s.userStatus}
+                                            </span>
                                         </td>
                                     </tr>
                                 )
@@ -151,106 +180,127 @@ export const SellerTab: React.FC = () => {
                     </div>
                 </div>
             </div>
-            <div>
-                {/* Seller detail modal */}
-                {selectedSeller && (
+
+            {/* Seller detail modal */}
+            {selectedSeller && (
+                <div
+                    className="fixed inset-0 flex items-center justify-center z-50"
+                    style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
+                    onClick={() => setSelectedSeller(null)}
+                >
                     <div
-                        className="fixed inset-0 flex items-center justify-center z-50"
-                        style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
-                        onClick={() => setSelectedSeller(null)}
+                        className="rounded-2xl border flex flex-col"
+                        style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)', width: 480, maxHeight: '85vh', overflow: 'hidden' }}
+                        onClick={(e) => e.stopPropagation()}
                     >
-                        <div
-                            className="rounded-2xl border flex flex-col"
-                            style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)', width: 480, maxHeight: '85vh', overflow: 'hidden' }}
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            {/* Modal header */}
-                            <div className="flex items-center justify-between px-6 py-5 border-b" style={{ borderColor: 'var(--color-border)' }}>
-                                <h2 className="text-base font-semibold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-text)' }}>Seller Details</h2>
-                                <button
-                                    onClick={() => setSelectedSeller(null)}
-                                    className="w-7 h-7 rounded-lg flex items-center justify-center text-lg leading-none"
-                                    style={{ background: 'var(--color-surface-2)', color: 'var(--color-muted)' }}
-                                >
-                                    ×
-                                </button>
-                            </div>
+                        {/* Modal header */}
+                        <div className="flex items-center justify-between px-6 py-5 border-b" style={{ borderColor: 'var(--color-border)' }}>
+                            <h2 className="text-base font-semibold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-text)' }}>Seller Details</h2>
+                            <button
+                                onClick={() => setSelectedSeller(null)}
+                                className="w-7 h-7 rounded-lg flex items-center justify-center text-lg leading-none"
+                                style={{ background: 'var(--color-surface-2)', color: 'var(--color-muted)' }}
+                            >
+                                ×
+                            </button>
+                        </div>
 
-                            {/* Modal body */}
-                            <div className="flex-1 overflow-y-auto px-6 py-5 flex flex-col gap-5">
-                                {/* Avatar + name */}
-                                <div className="flex items-center gap-4">
-                                    <div
-                                        className="w-14 h-14 rounded-full flex items-center justify-center text-lg font-bold shrink-0"
-                                        style={{ background: 'var(--color-accent)', color: 'white', fontFamily: 'var(--font-display)' }}
-                                    >
-                                        {selectedSeller.name.split(' ').map((n) => n[0]).join('').slice(0, 2)}
-                                    </div>
-                                    <div>
-                                        <p className="text-base font-semibold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-text)' }}>{selectedSeller.name}</p>
-                                        <p className="text-xs mt-0.5" style={{ color: 'var(--color-muted)' }}>{selectedSeller.shop}</p>
-                                        <p className="text-xs mt-0.5" style={{ color: 'var(--color-muted)', fontFamily: 'var(--font-mono)' }}>{selectedSeller.email}</p>
-                                    </div>
-                                    <div className="ml-auto">
-                                        {(() => {
-                                            const st = SELLER_STATUS[selectedSeller.status] ?? SELLER_STATUS['Active']
-                                            return (
-                                                <span
-                                                    className="text-xs font-medium px-2.5 py-1 rounded-full"
-                                                    style={{ color: st.color, background: st.bg }}
-                                                >
-                        {selectedSeller.status}
-                      </span>
-                                            )
-                                        })()}
-                                    </div>
-                                </div>
-
-                                {/* Stats grid */}
-                                <div className="grid grid-cols-4 gap-3">
-                                    {[
-                                        { label: 'Products', val: selectedSeller.products },
-                                        { label: 'Revenue', val: selectedSeller.revenue },
-                                        { label: 'Reports', val: selectedSeller.reports },
-                                        { label: 'Joined', val: selectedSeller.joined },
-                                    ].map((item) => (
-                                        <div key={item.label} className="rounded-xl p-3" style={{ background: 'var(--color-surface-2)' }}>
-                                            <p className="text-xs font-semibold" style={{ color: 'var(--color-text)', fontFamily: 'var(--font-display)' }}>{item.val}</p>
-                                            <p className="text-[10px] mt-0.5" style={{ color: 'var(--color-muted)' }}>{item.label}</p>
-                                        </div>
-                                    ))}
-                                </div>
-
-                                {/* Store description */}
-                                <div>
-                                    <p className="text-xs font-medium mb-2" style={{ color: 'var(--color-muted)' }}>Store Description</p>
-                                    <p className="text-sm leading-relaxed" style={{ color: 'var(--color-text)' }}>{selectedSeller.description}</p>
-                                </div>
-                            </div>
-
-                            {/* Modal footer — actions */}
-                            <div className="flex gap-3 px-6 py-4 border-t" style={{ borderColor: 'var(--color-border)' }}>
-                                <button
-                                    onClick={() => handleReject(selectedSeller.name)}
-                                    className="flex-1 py-2.5 rounded-xl text-sm font-medium transition-colors duration-150"
-                                    style={{ background: 'rgba(248,113,113,0.12)', color: 'var(--color-danger)', fontFamily: 'var(--font-display)', border: '1px solid rgba(248,113,113,0.2)' }}
-                                >
-                                    Reject
-                                </button>
-                                <button
-                                    onClick={() => handleApprove(selectedSeller.name)}
-                                    className="flex-1 py-2.5 rounded-xl text-sm font-medium transition-colors duration-150"
+                        {/* Modal body */}
+                        <div className="flex-1 overflow-y-auto px-6 py-5 flex flex-col gap-5">
+                            {/* Avatar + name */}
+                            <div className="flex items-center gap-4">
+                                <div
+                                    className="w-14 h-14 rounded-full flex items-center justify-center text-lg font-bold shrink-0"
                                     style={{ background: 'var(--color-accent)', color: 'white', fontFamily: 'var(--font-display)' }}
                                 >
-                                    Approve
-                                </button>
+                                    {selectedSeller.fullName ? selectedSeller.fullName.split(' ').map((n) => n[0]).join('').slice(0, 2) : 'S'}
+                                </div>
+                                <div>
+                                    <p className="text-base font-semibold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-text)' }}>{selectedSeller.fullName}</p>
+                                    <p className="text-xs mt-0.5" style={{ color: 'var(--color-muted)' }}>{selectedSeller.storeName}</p>
+                                    <p className="text-xs mt-0.5" style={{ color: 'var(--color-muted)', fontFamily: 'var(--font-mono)' }}>{selectedSeller.email}</p>
+                                </div>
+                                <div className="ml-auto">
+                                    {(() => {
+                                        const st = SELLER_STATUS[selectedSeller.userStatus] ?? SELLER_STATUS['ACTIVE'];
+                                        return (
+                                            <span
+                                                className="text-xs font-medium px-2.5 py-1 rounded-full"
+                                                style={{ color: st.color, background: st.bg }}
+                                            >
+                                                {selectedSeller.userStatus}
+                                            </span>
+                                        )
+                                    })()}
+                                </div>
+                            </div>
+
+                            {/* Stats grid */}
+                            <div className="grid grid-cols-4 gap-3">
+                                {[
+                                    { label: 'Products', val: selectedSeller.productCount },
+                                    { label: 'Revenue', val: `₱${selectedSeller.revenue?.toLocaleString() ?? 0}` },
+                                    { label: 'Reports', val: selectedSeller.noOfreports },
+                                    { label: 'Joined', val: selectedSeller.dateJoined ? new Date(selectedSeller.dateJoined).toLocaleDateString() : 'N/A' },
+                                ].map((item) => (
+                                    <div key={item.label} className="rounded-xl p-3" style={{ background: 'var(--color-surface-2)' }}>
+                                        <p className="text-xs font-semibold" style={{ color: 'var(--color-text)', fontFamily: 'var(--font-display)' }}>{item.val}</p>
+                                        <p className="text-[10px] mt-0.5" style={{ color: 'var(--color-muted)' }}>{item.label}</p>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Store description */}
+                            <div>
+                                <p className="text-xs font-medium mb-2" style={{ color: 'var(--color-muted)' }}>Store Description</p>
+                                <p className="text-sm leading-relaxed" style={{ color: 'var(--color-text)' }}>{selectedSeller.storeDescription || 'No store description available.'}</p>
                             </div>
                         </div>
+
+                        {/* Modal footer (Conditional Action Buttons) */}
+                        <div className="flex gap-3 px-6 py-4 border-t" style={{ borderColor: 'var(--color-border)' }}>
+                            {selectedSeller.userStatus === 'PENDING' && (
+                                <>
+                                    <button
+                                        onClick={() => handleReject(selectedSeller.email)}
+                                        className="flex-1 py-2.5 rounded-xl text-sm font-medium transition-colors duration-150"
+                                        style={{ background: 'rgba(248,113,113,0.12)', color: 'var(--color-danger)', fontFamily: 'var(--font-display)', border: '1px solid rgba(248,113,113,0.2)' }}
+                                    >
+                                        Reject
+                                    </button>
+                                    <button
+                                        onClick={() => handleApprove(selectedSeller.email)}
+                                        className="flex-1 py-2.5 rounded-xl text-sm font-medium transition-colors duration-150"
+                                        style={{ background: 'var(--color-accent)', color: 'white', fontFamily: 'var(--font-display)' }}
+                                    >
+                                        Approve
+                                    </button>
+                                </>
+                            )}
+
+                            {selectedSeller.userStatus === 'ACTIVE' && (
+                                <button
+                                    onClick={() => handleBan(selectedSeller.email)}
+                                    className="w-full py-2.5 rounded-xl text-sm font-medium transition-colors duration-150"
+                                    style={{ background: 'rgba(248,113,113,0.12)', color: 'var(--color-danger)', fontFamily: 'var(--font-display)', border: '1px solid rgba(248,113,113,0.2)' }}
+                                >
+                                    Ban Seller
+                                </button>
+                            )}
+
+                            {(selectedSeller.userStatus === 'BANNED' || selectedSeller.userStatus === 'REJECTED') && (
+                                <button
+                                    onClick={() => handleRestore(selectedSeller.email)}
+                                    className="w-full py-2.5 rounded-xl text-sm font-medium transition-colors duration-150"
+                                    style={{ background: 'var(--color-accent)', color: 'white', fontFamily: 'var(--font-display)' }}
+                                >
+                                    Restore Seller
+                                </button>
+                            )}
+                        </div>
                     </div>
-                )}
-            </div>
+                </div>
+            )}
         </main>
-
-
     );
-}
+};

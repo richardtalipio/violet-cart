@@ -60,3 +60,7 @@ export interface Order {
     shippingAddress: ShippingAddress;
     breakdown: ExpenseBreakdown;
 }
+
+export interface UpdateStatusRequest {
+    status: 'ACTIVE' | 'PENDING APPROVAL' | 'BANNED' | 'REJECTED';
+}
