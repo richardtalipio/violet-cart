@@ -1,15 +1,16 @@
 package com.violetCart.backend.domain.user.service;
 
-import com.violetCart.backend.common.exception.BadRequestException;
+
+import com.violetCart.backend.common.exception.ResourceNotFoundException;
 import com.violetCart.backend.domain.user.dto.response.SellerResponse;
 import com.violetCart.backend.domain.user.dto.response.UserResponse;
-import com.violetCart.backend.domain.user.entity.Role;
-import com.violetCart.backend.domain.user.entity.StoreProfile;
 import com.violetCart.backend.domain.user.entity.UserAccount;
+import com.violetCart.backend.domain.user.entity.UserStatus;
 import com.violetCart.backend.domain.user.repository.UserAccountRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -23,16 +24,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     @Override
     public UserResponse getCurrentUserProfile(UserAccount userAccount) {
         log.info("Getting current user profile details ");
-        return UserResponse.builder()
-                .id(userAccount.getId())
-                .firstName(userAccount.getFirstName())
-                .lastName(userAccount.getLastName())
-                .email(userAccount.getEmail())
-                .role(userAccount.getRole())
-                .status(userAccount.getStatus())
-                .createdAt(userAccount.getCreatedAt())
-                .updatedAt(userAccount.getUpdatedAt())
-                .build();
+        return userAccount.toUserResponse();
     }
 
     @Override
@@ -44,5 +36,12 @@ public class UserAccountServiceImpl implements UserAccountService {
 
     }
 
+    @Transactional
+    public UserResponse updateStatusByEmail(String email, UserStatus newStatus) {
+        UserAccount user = userAccountRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));
+        user.setStatus(newStatus);
+        return user.toUserResponse();
+    }
 
 }

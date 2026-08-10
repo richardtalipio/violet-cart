@@ -1,5 +1,6 @@
 package com.violetCart.backend.domain.user.entity;
 
+import com.violetCart.backend.domain.user.dto.response.UserResponse;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -92,5 +93,18 @@ public class UserAccount implements UserDetails {
     @Override
     public boolean isEnabled() {
         return status == UserStatus.ACTIVE;
+    }
+
+    public UserResponse toUserResponse() {
+        return UserResponse.builder()
+                .id(this.getId())
+                .firstName(this.getFirstName())
+                .lastName(this.getLastName())
+                .email(this.getEmail())
+                .role(this.getRole())
+                .status(this.getStatus())
+                .createdAt(this.getCreatedAt())
+                .updatedAt(this.getUpdatedAt())
+                .build();
     }
 }

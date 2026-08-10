@@ -21,7 +21,6 @@ public class UserResponse {
     private String email;
     private Role role;
     private UserStatus status;
-    private String storeDescription;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

@@ -11,7 +11,7 @@ export const useSellerManagement = () => {
         setLoading(true);
         setError(null);
         try {
-            const data = await adminService.getSellers();
+            const data = (await adminService.getSellers()).data;
             setSellers(Array.isArray(data) ? data : []);
         } catch (err: any) {
             setError(err.response?.data?.message || 'Failed to fetch seller accounts.');
