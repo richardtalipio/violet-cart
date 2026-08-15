@@ -1,6 +1,7 @@
 import { api } from './axios';
-import type { AuthResponse, ApiResponse } from '../types/auth';
+import type { AuthResponse } from '../types/auth';
 import type { LoginFormData, RegisterFormData } from '../schemas/authSchemas';
+import type {ApiResponse} from "@/types/common.ts";
 
 export const authService = {
     login: async (credentials: LoginFormData): Promise<ApiResponse<AuthResponse>> => {

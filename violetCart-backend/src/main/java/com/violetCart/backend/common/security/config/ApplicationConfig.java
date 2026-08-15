@@ -1,5 +1,6 @@
 package com.violetCart.backend.common.security.config;
 
+import com.violetCart.backend.domain.user.entity.CustomUserDetails;
 import com.violetCart.backend.domain.user.repository.UserAccountRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
@@ -23,6 +24,7 @@ public class ApplicationConfig {
     @Bean
     public UserDetailsService userDetailsService() {
         return username -> userAccountRepository.findByEmail(username)
+                .map(CustomUserDetails::fromUserAccount)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + username));
     }
 

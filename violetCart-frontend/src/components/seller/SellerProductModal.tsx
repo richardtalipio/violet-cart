@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { type Product } from '../common/types';
+import { useSellerDashboard } from "@/hooks/useSellerDashboard.ts";
 
 interface SellerProductModalProps {
     isOpen: boolean;
     product: Product | null;
     onClose: () => void;
-    onSave: (product: Partial<Product>) => void;
+    onSave?: (product: Partial<Product>) => void;
     onDelete?: (productId: string) => void;
 }
 
@@ -13,61 +14,68 @@ export const SellerProductModal: React.FC<SellerProductModalProps> = ({
                                                                           isOpen,
                                                                           product,
                                                                           onClose,
-                                                                          onSave,
                                                                           onDelete,
                                                                       }) => {
-    const [name, setName] = useState('');
-    const [price, setPrice] = useState<number>(0);
-    const [category, setCategory] = useState('');
-    const [stock, setStock] = useState<number>(0);
-    const [image, setImage] = useState('');
-    const [description, setDescription] = useState('');
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
+    const {
+        register,
+        setValue,
+        watch,
+        reset,
+        handleSubmit,
+        errors,
+        isSubmitting,
+        serverError,
+    } = useSellerDashboard(() => {
+        onClose();
+    });
+
+    // Populate or reset form when modal opens or product changes
     useEffect(() => {
         if (product) {
-            setName(product.name);
-            setPrice(product.price);
-            setCategory(product.category);
-            setStock(product.stock);
-            setImage(product.image);
-            setDescription(product.description);
+            reset({
+                productName: product.name,
+                price: product.price.toString(),
+                stocksLeft: product.stock.toString(),
+                category: product.category,
+                description: product.description,
+            });
         } else {
-            setName('');
-            setPrice(0);
-            setCategory('');
-            setStock(1);
-            setImage('');
-            setDescription('');
+            reset({
+                productName: '',
+                price: '',
+                stocksLeft: '',
+                category: '',
+                description: '',
+            });
         }
-    }, [product, isOpen]);
+    }, [product, isOpen, reset]);
+
+    // Watch image file input in real time
+    const imageFile = watch('imageFile');
+
+    // Derive object URL directly from watched file
+    const imagePreview = imageFile instanceof File ? URL.createObjectURL(imageFile) : '';
 
     if (!isOpen) return null;
 
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setImage(reader.result as string);
-            };
-            reader.readAsDataURL(file);
+            setValue('imageFile', file, { shouldValidate: true });
         }
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        onSave({
-            id: product ? product.id : undefined,
-            name,
-            price: Number(price),
-            priceFormatted: `₱${Number(price).toLocaleString()}`,
-            category: category.trim() || 'Uncategorized',
-            stock: Number(stock),
-            image: image || 'https://images.unsplash.com/photo-1590874103328-eac38a683ce7?w=300&auto=format&fit=crop&q=80',
-            description,
-        });
-        onClose();
+    const handleRemoveImage = () => {
+        setValue('imageFile', undefined as any, { shouldValidate: true });
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
     };
+
+    const isEditing = product !== null;
+    const displayImage = isEditing ? product?.image : imagePreview;
 
     return (
         <div
@@ -82,21 +90,28 @@ export const SellerProductModal: React.FC<SellerProductModalProps> = ({
             >
                 <div className="flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: 'var(--color-border)' }}>
                     <h2 className="text-base font-semibold" style={{ fontFamily: 'var(--font-display)' }}>
-                        {product ? 'Edit Product' : 'Add New Product'}
+                        {isEditing ? 'Edit Product' : 'Add New Product'}
                     </h2>
                     <button onClick={onClose} className="w-7 h-7 rounded-lg flex items-center justify-center text-lg leading-none" style={{ background: 'var(--color-surface-2)', color: 'var(--color-muted)' }}>×</button>
                 </div>
 
                 <form onSubmit={handleSubmit} className="p-6 overflow-y-auto flex flex-col gap-4">
+                    {serverError && (
+                        <div className="p-3 text-xs rounded-xl bg-red-500/10 border border-red-500/20 text-red-500">
+                            {serverError}
+                        </div>
+                    )}
+
+                    {/* Image Upload Field */}
                     <div>
                         <label className="text-xs font-medium block mb-1" style={{ color: 'var(--color-muted)' }}>Product Image</label>
 
-                        {image && (
+                        {displayImage && (
                             <div className="mb-3 w-full h-40 rounded-xl overflow-hidden border relative" style={{ borderColor: 'var(--color-border)' }}>
-                                <img src={image} alt="Preview" className="w-full h-full object-cover" />
+                                <img src={displayImage} alt="Preview" className="w-full h-full object-cover" />
                                 <button
                                     type="button"
-                                    onClick={() => setImage('')}
+                                    onClick={handleRemoveImage}
                                     className="absolute top-2 right-2 px-2 py-1 text-[10px] rounded-md font-medium text-white"
                                     style={{ background: 'rgba(0,0,0,0.7)' }}
                                 >
@@ -111,56 +126,94 @@ export const SellerProductModal: React.FC<SellerProductModalProps> = ({
                                 style={{ background: 'var(--color-surface-2)', borderColor: 'var(--color-border)' }}
                             >
                                 📁 Upload Image File
-                                <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+                                <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleImageUpload}
+                                    className="hidden"
+                                    disabled={isEditing}
+                                />
                             </label>
                         </div>
+                        {errors.imageFile && (
+                            <p className="text-[10px] text-red-500 mt-1">{errors.imageFile.message as string}</p>
+                        )}
+                    </div>
 
-                        <p className="text-[10px] text-center my-2" style={{ color: 'var(--color-muted)' }}>— OR —</p>
-
+                    {/* Product Name */}
+                    <div>
+                        <label className="text-xs font-medium block mb-1" style={{ color: 'var(--color-muted)' }}>Product Name</label>
                         <input
-                            type="url"
-                            value={image}
-                            onChange={(e) => setImage(e.target.value)}
-                            placeholder="Paste image URL (https://...)"
+                            type="text"
+                            {...register('productName')}
                             className="w-full text-xs p-3 rounded-xl border outline-none"
                             style={{ background: 'var(--color-surface-2)', borderColor: 'var(--color-border)' }}
                         />
+                        {errors.productName && (
+                            <p className="text-[10px] text-red-500 mt-1">{errors.productName.message}</p>
+                        )}
                     </div>
 
-                    <div>
-                        <label className="text-xs font-medium block mb-1" style={{ color: 'var(--color-muted)' }}>Product Name</label>
-                        <input type="text" required value={name} onChange={(e) => setName(e.target.value)} className="w-full text-xs p-3 rounded-xl border outline-none" style={{ background: 'var(--color-surface-2)', borderColor: 'var(--color-border)' }} />
-                    </div>
-
+                    {/* Price & Stock */}
                     <div className="grid grid-cols-2 gap-3">
                         <div>
                             <label className="text-xs font-medium block mb-1" style={{ color: 'var(--color-muted)' }}>Price (₱)</label>
-                            <input type="number" required min="0" value={price} onChange={(e) => setPrice(Number(e.target.value))} className="w-full text-xs p-3 rounded-xl border outline-none" style={{ background: 'var(--color-surface-2)', borderColor: 'var(--color-border)' }} />
+                            <input
+                                type="number"
+                                step="0.01"
+                                {...register('price')}
+                                className="w-full text-xs p-3 rounded-xl border outline-none"
+                                style={{ background: 'var(--color-surface-2)', borderColor: 'var(--color-border)' }}
+                            />
+                            {errors.price && (
+                                <p className="text-[10px] text-red-500 mt-1">{errors.price.message}</p>
+                            )}
                         </div>
                         <div>
                             <label className="text-xs font-medium block mb-1" style={{ color: 'var(--color-muted)' }}>Stock Left</label>
-                            <input type="number" required min="0" value={stock} onChange={(e) => setStock(Number(e.target.value))} className="w-full text-xs p-3 rounded-xl border outline-none" style={{ background: 'var(--color-surface-2)', borderColor: 'var(--color-border)' }} />
+                            <input
+                                type="number"
+                                {...register('stocksLeft')}
+                                className="w-full text-xs p-3 rounded-xl border outline-none"
+                                style={{ background: 'var(--color-surface-2)', borderColor: 'var(--color-border)' }}
+                            />
+                            {errors.stocksLeft && (
+                                <p className="text-[10px] text-red-500 mt-1">{errors.stocksLeft.message}</p>
+                            )}
                         </div>
                     </div>
 
+                    {/* Category */}
                     <div>
                         <label className="text-xs font-medium block mb-1" style={{ color: 'var(--color-muted)' }}>Category</label>
                         <input
                             type="text"
-                            required
                             placeholder="e.g. Artisan, Electronics, Footwear"
-                            value={category}
-                            onChange={(e) => setCategory(e.target.value)}
+                            {...register('category')}
                             className="w-full text-xs p-3 rounded-xl border outline-none"
                             style={{ background: 'var(--color-surface-2)', borderColor: 'var(--color-border)' }}
                         />
+                        {errors.category && (
+                            <p className="text-[10px] text-red-500 mt-1">{errors.category.message}</p>
+                        )}
                     </div>
 
+                    {/* Description */}
                     <div>
                         <label className="text-xs font-medium block mb-1" style={{ color: 'var(--color-muted)' }}>Description</label>
-                        <textarea rows={3} value={description} onChange={(e) => setDescription(e.target.value)} className="w-full text-xs p-3 rounded-xl border outline-none" style={{ background: 'var(--color-surface-2)', borderColor: 'var(--color-border)' }} />
+                        <textarea
+                            rows={3}
+                            {...register('description')}
+                            className="w-full text-xs p-3 rounded-xl border outline-none"
+                            style={{ background: 'var(--color-surface-2)', borderColor: 'var(--color-border)' }}
+                        />
+                        {errors.description && (
+                            <p className="text-[10px] text-red-500 mt-1">{errors.description.message}</p>
+                        )}
                     </div>
 
+                    {/* Actions */}
                     <div className="pt-2 flex items-center justify-between border-t" style={{ borderColor: 'var(--color-border)' }}>
                         {product && onDelete ? (
                             <button
@@ -177,9 +230,9 @@ export const SellerProductModal: React.FC<SellerProductModalProps> = ({
                         ) : <div />}
 
                         <div className="flex gap-2">
-                            <button type="button" onClick={onClose} className="px-4 py-2 rounded-xl text-xs font-medium border" style={{ background: 'var(--color-surface-2)', borderColor: 'var(--color-border)' }}>Cancel</button>
-                            <button type="submit" className="px-5 py-2 rounded-xl text-xs font-medium text-white" style={{ background: 'var(--color-accent)' }}>
-                                {product ? 'Save Changes' : 'Add Product'}
+                            <button type="button" onClick={onClose} disabled={isSubmitting} className="px-4 py-2 rounded-xl text-xs font-medium border" style={{ background: 'var(--color-surface-2)', borderColor: 'var(--color-border)' }}>Cancel</button>
+                            <button type="submit" disabled={isSubmitting} className="px-5 py-2 rounded-xl text-xs font-medium text-white disabled:opacity-50" style={{ background: 'var(--color-accent)' }}>
+                                {isSubmitting ? 'Saving...' : isEditing ? 'Save Changes' : 'Add Product'}
                             </button>
                         </div>
                     </div>

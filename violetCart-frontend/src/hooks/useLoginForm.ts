@@ -7,7 +7,7 @@ import { loginSchema } from '../schemas/authSchemas';
 import type { LoginFormData } from '../schemas/authSchemas';
 import { authService } from '../api/authService';
 import { useAuthStore } from '../store/useAuthStore';
-import type { ApiResponse } from '../types/auth';
+import type { ApiResponse } from '../types/common';
 
 export const useLoginForm = () => {
     const [serverError, setServerError] = useState<string | null>(null);

@@ -1,5 +1,6 @@
 package com.violetCart.backend.domain.product.entity;
 
+import com.violetCart.backend.domain.product.dto.AddProductResponse;
 import com.violetCart.backend.domain.product.enums.ProductStatus;
 import com.violetCart.backend.domain.user.entity.StoreProfile;
 import jakarta.persistence.*;
@@ -23,8 +24,8 @@ public class Product {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private String title;
+    @Column(name = "product_name",  nullable = false)
+    private String productName;
 
     @Column(columnDefinition = "TEXT")
     private String description;
@@ -56,4 +57,10 @@ public class Product {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    public AddProductResponse toProductResponse() {
+        return AddProductResponse.builder()
+                .productName(this.productName)
+                .build();
+    }
 }

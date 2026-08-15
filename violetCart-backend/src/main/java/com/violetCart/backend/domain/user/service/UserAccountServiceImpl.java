@@ -22,8 +22,10 @@ public class UserAccountServiceImpl implements UserAccountService {
     private final UserAccountRepository userAccountRepository;
 
     @Override
-    public UserResponse getCurrentUserProfile(UserAccount userAccount) {
-        log.info("Getting current user profile details ");
+    public UserResponse getCurrentUserProfile(Long userId) {
+        log.info("Getting current user profile details for userId: {}", userId);
+        UserAccount userAccount = userAccountRepository.findById(userId)
+                .orElseThrow(() -> new com.violetCart.backend.common.exception.ResourceNotFoundException("User not found with id: " + userId));
         return userAccount.toUserResponse();
     }
 

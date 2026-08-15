@@ -1,6 +1,7 @@
 import { api } from './axios';
 import type {Seller, UpdateStatusRequest} from "@/components/common/types.ts";
-import type {ApiResponse, User} from "@/types/auth.ts";
+import type { User} from "@/types/auth.ts";
+import type {ApiResponse} from "@/types/common.ts";
 
 export const adminService = {
     getSellers: async (): Promise<ApiResponse<Seller[]>> => {

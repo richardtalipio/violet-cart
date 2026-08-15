@@ -13,9 +13,3 @@ export interface AuthResponse {
     role: string;
     status: string;
 }
-
-export interface ApiResponse<T> {
-    success: boolean;
-    message: string;
-    data: T;
-}

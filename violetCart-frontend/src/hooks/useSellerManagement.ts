@@ -1,6 +1,6 @@
 import type { Seller } from "@/components/common/types.ts";
 import { useState, useEffect, useCallback } from 'react';
-import { adminService } from '../api/adminService'; // Adjust path to your adminService
+import { adminService } from '../api/adminService';
 
 export const useSellerManagement = () => {
     const [sellers, setSellers] = useState<Seller[]>([]);

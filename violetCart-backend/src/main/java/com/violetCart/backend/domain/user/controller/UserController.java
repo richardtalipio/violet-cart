@@ -2,7 +2,7 @@ package com.violetCart.backend.domain.user.controller;
 
 import com.violetCart.backend.common.response.ApiResponse;
 import com.violetCart.backend.domain.user.dto.response.UserResponse;
-import com.violetCart.backend.domain.user.entity.UserAccount;
+import com.violetCart.backend.domain.user.entity.CustomUserDetails;
 import com.violetCart.backend.domain.user.service.UserAccountService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -20,9 +20,9 @@ public class UserController {
 
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<UserResponse>> getCurrentUser(
-            @AuthenticationPrincipal UserAccount currentUser
+            @AuthenticationPrincipal CustomUserDetails currentUser
     ) {
-        UserResponse response = userAccountService.getCurrentUserProfile(currentUser);
+        UserResponse response = userAccountService.getCurrentUserProfile(currentUser.getId());
         return ResponseEntity.ok(ApiResponse.success("User profile retrieved successfully", response));
     }
 }
