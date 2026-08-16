@@ -2,13 +2,20 @@ package com.violetCart.backend.domain.product.service;
 
 import com.violetCart.backend.common.utils.ImageStorageService;
 import com.violetCart.backend.domain.product.dto.AddProductRequest;
+import com.violetCart.backend.domain.product.dto.ProductSearchCriteria;
+import com.violetCart.backend.domain.product.dto.RetrieveProductResponse;
 import com.violetCart.backend.domain.product.entity.Product;
 import com.violetCart.backend.domain.product.repository.ProductRepository;
 import com.violetCart.backend.domain.user.entity.StoreProfile;
 import com.violetCart.backend.domain.user.repository.StoreProfileRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
 
 @Service
 @RequiredArgsConstructor
@@ -30,6 +37,7 @@ public class ProductServiceImpl implements ProductService {
                 .productName(request.getProductName())
                 .description(request.getDescription())
                 .price(request.getPrice())
+                .category(request.getCategory())
                 .stockQuantity(request.getStocksLeft())
                 .storeProfile(storeProfile)
                 .imageUrl("") // Placeholder, will update after getting product ID
@@ -57,5 +65,31 @@ public class ProductServiceImpl implements ProductService {
         }
 
         return product;
+    }
+
+    @Override
+    public Page<RetrieveProductResponse> retrieveProducts(ProductSearchCriteria criteria, Pageable pageable, Long storeProfileId) {
+        Specification<Product> spec = Specification.where(null);
+
+        if (criteria.getProductName() != null && !criteria.getProductName().isBlank()) {
+            spec = spec.and((root, query, cb) -> cb.like(cb.lower(root.get("productName")), "%" + criteria.getProductName().toLowerCase() + "%"));
+        }
+        if (criteria.getCategory() != null && !criteria.getCategory().isBlank()) {
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("category"), criteria.getCategory()));
+        }
+        if (storeProfileId != null) {
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("storeProfile").get("id"), storeProfileId));
+        }
+
+        return productRepository.findAll(spec, pageable)
+                .map(product -> RetrieveProductResponse.builder()
+                        .id(product.getId())
+                        .imageUrl(product.getImageUrl())
+                        .productName(product.getProductName())
+                        .price(product.getPrice())
+                        .stockQuantity(product.getStockQuantity())
+                        .category(product.getCategory())
+                        .description(product.getDescription())
+                        .build());
     }
 }

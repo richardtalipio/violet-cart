@@ -7,8 +7,9 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class AddProductResponse {
+public class ProductSearchCriteria {
 
     private String productName;
+    private String category;
 
 }

@@ -71,8 +71,8 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
                         >
                             <div className="w-full h-40 bg-surface-2 overflow-hidden relative">
                                 <img
-                                    src={product.image}
-                                    alt={product.name}
+                                    src={product.imageUrl}
+                                    alt={product.productName}
                                     className="w-full h-full object-cover"
                                 />
                                 <span
@@ -89,7 +89,7 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
                                         className="text-xs font-semibold line-clamp-1"
                                         style={{ fontFamily: 'var(--font-display)' }}
                                     >
-                                        {product.name}
+                                        {product.productName}
                                     </h3>
                                     <p className="text-[11px] mt-0.5 line-clamp-2" style={{ color: 'var(--color-muted)' }}>
                                         {product.description}
@@ -99,10 +99,10 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
                                 <div className="flex items-center justify-between pt-2 border-t" style={{ borderColor: 'var(--color-border)' }}>
                                     <div>
                                         <span className="text-xs font-bold" style={{ fontFamily: 'var(--font-mono)' }}>
-                                            {product.priceFormatted}
+                                            ₱{product.price}
                                         </span>
                                         <div className="text-[10px]" style={{ color: 'var(--color-muted)' }}>
-                                            Stock: {product.stock}
+                                            Stock: {product.stockQuantity}
                                         </div>
                                     </div>
                                 </div>

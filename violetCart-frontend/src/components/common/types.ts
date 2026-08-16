@@ -14,15 +14,13 @@ export interface Seller {
 }
 export interface Product {
     id: string;
-    name: string;
-    image: string;
+    productName: string;
+    imageUrl: string;
     seller: string;
     price: number;
-    priceFormatted: string;
     category: string;
     rating: number;
-    reviewCount: number;
-    stock: number;
+    stockQuantity: number;
     description: string;
 }
 
@@ -63,4 +61,9 @@ export interface Order {
 
 export interface UpdateStatusRequest {
     status: 'ACTIVE' | 'PENDING APPROVAL' | 'BANNED' | 'REJECTED';
+}
+
+export interface CartItem {
+    product: Product;
+    quantity: number;
 }

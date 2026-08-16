@@ -1,9 +1,10 @@
 import { api } from './axios';
-import type { AddProductFormData, AddProductResponse } from "@/schemas/sellerDashboardSchema.ts";
+import type { AddProductFormData } from "@/schemas/sellerDashboardSchema.ts";
 import type { ApiResponse } from "@/types/common.ts";
+import type {Product} from "@/components/common/types.ts";
 
 export const sellerDashboardService = {
-    addProduct: async (formData: AddProductFormData): Promise<ApiResponse<AddProductResponse>> => {
+    addProduct: async (formData: AddProductFormData): Promise<ApiResponse<Product>> => {
         // Create FormData to send file and form fields
         const data = new FormData();
         data.append('imageFile', formData.imageFile);
@@ -13,7 +14,7 @@ export const sellerDashboardService = {
         data.append('category', formData.category);
         data.append('description', formData.description);
 
-        const response = await api.post<ApiResponse<AddProductResponse>>('/products', data, {
+        const response = await api.post<ApiResponse<Product>>('/products', data, {
             headers: {
                 'Content-Type': 'multipart/form-data',
             },

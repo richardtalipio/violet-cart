@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { type Product } from '../common/types';
-import { useSellerDashboard } from "@/hooks/useSellerDashboard.ts";
+import {useAddProductModalForm} from "@/hooks/useAddProductModalForm.ts";
 
 interface SellerProductModalProps {
     isOpen: boolean;
@@ -27,7 +27,7 @@ export const SellerProductModal: React.FC<SellerProductModalProps> = ({
         errors,
         isSubmitting,
         serverError,
-    } = useSellerDashboard(() => {
+    } = useAddProductModalForm(() => {
         onClose();
     });
 
@@ -35,9 +35,9 @@ export const SellerProductModal: React.FC<SellerProductModalProps> = ({
     useEffect(() => {
         if (product) {
             reset({
-                productName: product.name,
+                productName: product.productName,
                 price: product.price.toString(),
-                stocksLeft: product.stock.toString(),
+                stocksLeft: product.stockQuantity.toString(),
                 category: product.category,
                 description: product.description,
             });
@@ -75,7 +75,7 @@ export const SellerProductModal: React.FC<SellerProductModalProps> = ({
     };
 
     const isEditing = product !== null;
-    const displayImage = isEditing ? product?.image : imagePreview;
+    const displayImage = isEditing ? product?.imageUrl : imagePreview;
 
     return (
         <div

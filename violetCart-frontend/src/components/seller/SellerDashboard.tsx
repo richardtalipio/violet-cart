@@ -124,15 +124,13 @@ export const SellerDashboard: React.FC = () => {
         } else {
             const newProduct: Product = {
                 id: `p-${Date.now()}`,
-                name: pData.name || 'New Product',
-                image: pData.image || '',
+                productName: pData.productName || 'New Product',
+                imageUrl: pData.imageUrl || '',
                 seller: storeInfo.name,
                 price: pData.price || 0,
-                priceFormatted: pData.priceFormatted || '₱0',
                 category: pData.category || 'Artisan',
                 rating: 5.0,
-                reviewCount: 0,
-                stock: pData.stock || 0,
+                stockQuantity: pData.stockQuantity || 0,
                 description: pData.description || '',
             };
             setProducts((prev) => [newProduct, ...prev]);

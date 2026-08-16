@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import type { Product, CartItem } from './types';
 import { STORE_PRODUCTS, CATEGORIES } from '../common/mockData';
 import { ProductGrid } from './ProductGrid';
 import { ProductDetailModal } from './ProductDetailModal';
@@ -8,6 +7,9 @@ import { CheckoutModal } from './CheckoutModal';
 import { StoreHeader } from './StoreHeader';
 import {useAuthStore} from "@/store/useAuthStore.ts";
 import {useNavigate} from "react-router-dom";
+import type {CartItem, Product} from "@/components/common/types.ts";
+
+
 
 const PAGE_SIZE = 8; // Adjust grid items per page as needed
 
@@ -35,7 +37,7 @@ export const Customer: React.FC = () => {
     const filteredProducts = STORE_PRODUCTS.filter((p) => {
         const matchesCategory = selectedCategory === 'All' || p.category === selectedCategory;
         const matchesSearch =
-            p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            p.productName.toLowerCase().includes(searchQuery.toLowerCase()) ||
             p.seller.toLowerCase().includes(searchQuery.toLowerCase());
         return matchesCategory && matchesSearch;
     });

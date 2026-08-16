@@ -1,5 +1,5 @@
 import React from 'react';
-import { type CartItem } from './types';
+import type {CartItem} from "@/components/common/types.ts";
 
 interface CartDrawerProps {
     isOpen: boolean;
@@ -46,10 +46,10 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                     ) : (
                         cart.map((item) => (
                             <div key={item.product.id} className="flex gap-4 p-3 rounded-xl border" style={{ background: 'var(--color-surface-2)', borderColor: 'var(--color-border)' }}>
-                                <img src={item.product.image} alt={item.product.name} className="w-14 h-14 rounded-lg object-cover" />
+                                <img src={item.product.imageUrl} alt={item.product.productName} className="w-14 h-14 rounded-lg object-cover" />
                                 <div className="flex-1 min-w-0">
-                                    <p className="text-xs font-semibold truncate">{item.product.name}</p>
-                                    <p className="text-[10px]" style={{ color: 'var(--color-muted)' }}>{item.product.priceFormatted}</p>
+                                    <p className="text-xs font-semibold truncate">{item.product.productName}</p>
+                                    <p className="text-[10px]" style={{ color: 'var(--color-muted)' }}>₱{item.product.price}</p>
                                     <div className="flex items-center gap-2 mt-2">
                                         <button onClick={() => onUpdateQuantity(item.product.id, -1)} className="w-5 h-5 rounded border flex items-center justify-center text-xs" style={{ borderColor: 'var(--color-border)' }}>-</button>
                                         <span className="text-xs font-mono">{item.quantity}</span>

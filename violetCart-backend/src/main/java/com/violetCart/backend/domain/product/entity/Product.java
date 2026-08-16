@@ -1,6 +1,6 @@
 package com.violetCart.backend.domain.product.entity;
 
-import com.violetCart.backend.domain.product.dto.AddProductResponse;
+import com.violetCart.backend.domain.product.dto.RetrieveProductResponse;
 import com.violetCart.backend.domain.product.enums.ProductStatus;
 import com.violetCart.backend.domain.user.entity.StoreProfile;
 import jakarta.persistence.*;
@@ -34,8 +34,15 @@ public class Product {
     private BigDecimal price;
 
     @Column(nullable = false)
+    private String category;
+
+    @Column(nullable = false)
     @Builder.Default
     private Integer stockQuantity = 0;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Double rating = 0.0;
 
     @Column(name = "image_url")
     private String imageUrl;
@@ -58,9 +65,16 @@ public class Product {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    public AddProductResponse toProductResponse() {
-        return AddProductResponse.builder()
+    public RetrieveProductResponse toRetrieveProductResponse() {
+        return RetrieveProductResponse.builder()
+                .id(this.id)
+                .imageUrl(this.imageUrl)
                 .productName(this.productName)
+                .price(this.price)
+                .stockQuantity(this.stockQuantity)
+                .rating(this.rating)
+                .category(this.category)
+                .description(this.description)
                 .build();
     }
 }

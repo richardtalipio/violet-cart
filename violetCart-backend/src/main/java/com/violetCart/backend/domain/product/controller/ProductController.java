@@ -2,16 +2,26 @@ package com.violetCart.backend.domain.product.controller;
 
 import com.violetCart.backend.common.response.ApiResponse;
 import com.violetCart.backend.domain.product.dto.AddProductRequest;
+import com.violetCart.backend.domain.product.dto.ProductSearchCriteria;
+import com.violetCart.backend.domain.product.dto.RetrieveProductResponse;
 import com.violetCart.backend.domain.product.entity.Product;
 import com.violetCart.backend.domain.product.service.ProductService;
 import com.violetCart.backend.domain.user.entity.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.math.BigDecimal;
 
 @RestController
 @RequestMapping("/api/v1/products")
@@ -27,7 +37,7 @@ public class ProductController {
      */
     @PreAuthorize("hasRole('SELLER')")
     @PostMapping(consumes = "multipart/form-data")
-    public ResponseEntity<ApiResponse<Product>> addProduct(
+    public ResponseEntity<ApiResponse<RetrieveProductResponse>> addProduct(
             @RequestParam("imageFile") MultipartFile imageFile,
             @RequestParam("productName") String productName,
             @RequestParam("price") java.math.BigDecimal price,
@@ -57,6 +67,20 @@ public class ProductController {
         Product savedProduct = productService.addProduct(request, currentUser.getStoreProfileId(), currentUser.getId());
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(ApiResponse.success("Product added successfully", savedProduct));
+                .body(ApiResponse.success("Product added successfully", savedProduct.toRetrieveProductResponse()));
+    }
+
+    @GetMapping
+    public ResponseEntity<ApiResponse<Page<RetrieveProductResponse>>> getProducts(
+            @ModelAttribute ProductSearchCriteria criteria,
+            @PageableDefault(size = 10, sort = "productName", direction = Sort.Direction.ASC) Pageable pageable
+    ) {
+        Long storeProfileId = null;
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof CustomUserDetails) {
+            storeProfileId = ((CustomUserDetails) authentication.getPrincipal()).getStoreProfileId();
+        }
+        Page<RetrieveProductResponse> products = productService.retrieveProducts(criteria, pageable, storeProfileId);
+        return ResponseEntity.ok(ApiResponse.success("Products retrieved successfully", products));
     }
 }

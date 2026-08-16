@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { type Product } from './types';
+import type {Product} from "@/components/common/types.ts";
 
 interface ProductDetailModalProps {
     product: Product | null;
@@ -20,8 +20,8 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 
     if (!product) return null;
 
-    const isOutOfStock = product.stock <= 0;
-    const isLowStock = product.stock > 0 && product.stock <= 5;
+    const isOutOfStock = product.stockQuantity <= 0;
+    const isLowStock = product.stockQuantity > 0 && product.stockQuantity <= 5;
 
     const handleRatingSubmit = (ratingValue: number) => {
         setUserRating(ratingValue);
@@ -72,8 +72,8 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                 {/* Modal Body */}
                 <div className="p-6 overflow-y-auto flex flex-col gap-5">
                     <img
-                        src={product.image}
-                        alt={product.name}
+                        src={product.imageUrl}
+                        alt={product.productName}
                         className="w-full h-48 object-cover rounded-xl border"
                         style={{ borderColor: 'var(--color-border)' }}
                     />
@@ -99,12 +99,12 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                                             : 'var(--color-muted)',
                                 }}
                             >
-                                {isOutOfStock ? 'Out of Stock' : `${product.stock} left in stock`}
+                                {isOutOfStock ? 'Out of Stock' : `${product.stockQuantity} left in stock`}
                             </span>
                         </div>
 
                         <h3 className="text-lg font-bold mt-2" style={{ fontFamily: 'var(--font-display)' }}>
-                            {product.name}
+                            {product.productName}
                         </h3>
                         <p className="text-xs" style={{ color: 'var(--color-muted)' }}>
                             Sold by {product.seller}
@@ -125,7 +125,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                                 Rate this Product
                             </span>
                             <span className="text-[10px]" style={{ color: 'var(--color-muted)', fontFamily: 'var(--font-mono)' }}>
-                                Overall: ★ {product.rating.toFixed(1)} ({product.reviewCount})
+                                Overall: ★ {product.rating.toFixed(1)}
                             </span>
                         </div>
 
@@ -161,7 +161,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                 {/* Footer Action */}
                 <div className="p-6 border-t flex items-center justify-between" style={{ borderColor: 'var(--color-border)' }}>
                     <span className="text-lg font-bold" style={{ fontFamily: 'var(--font-mono)' }}>
-                        {product.priceFormatted}
+                        ₱{product.price}
                     </span>
                     <button
                         disabled={isOutOfStock}
