@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import { type Product, type Order, type OrderStatus } from '../common/types';
-import { STORE_PRODUCTS, CATEGORIES } from '../common/mockData';
+import { CATEGORIES } from '../common/mockData';
 import { ProductGrid } from './ProductGrid';
 import { SellerProductModal } from './SellerProductModal';
 import { SellerOrdersTable } from './SellerOrdersTable';
 import { ConfirmModal } from './ConfirmModal';
-import {useAuthStore} from "@/store/useAuthStore.ts";
-import {useNavigate} from "react-router-dom";
+import { useAuthStore } from "@/store/useAuthStore.ts";
+import { useNavigate } from "react-router-dom";
+import { useSellerDashboard } from '@/hooks/useSellerDashboard';
 
 const PAGE_SIZE = 8;
 
@@ -86,7 +87,8 @@ export const SellerDashboard: React.FC = () => {
     };
 
     const [activeTab, setActiveTab] = useState<'products' | 'orders'>('products');
-    const [products, setProducts] = useState<Product[]>(STORE_PRODUCTS.filter((p) => p.seller === storeInfo.name));
+    const { products, setProducts, register, handleSubmit, setValue, watch } = useSellerDashboard();
+
     const [selectedCategory, setSelectedCategory] = useState('All');
     const [currentPage, setCurrentPage] = useState(1);
 
@@ -101,6 +103,18 @@ export const SellerDashboard: React.FC = () => {
     const logout = useAuthStore((state) => state.logout);
     const navigate = useNavigate();
 
+    // Watch search value for conditional UI (like clear button)
+    const productNameValue = watch ? watch('productName') : '';
+
+    const isMounted = useRef(false);
+
+    useEffect(() => {
+        if (!isMounted.current) {
+            handleSubmit();
+            isMounted.current = true;
+        }
+    }, [handleSubmit]);
+
     const onLogout = () => {
         logout();
         navigate('/login', { replace: true });
@@ -111,29 +125,10 @@ export const SellerDashboard: React.FC = () => {
         setTimeout(() => setToastMessage(null), 3000);
     };
 
-    const filteredProducts = products.filter(
-        (p) => selectedCategory === 'All' || p.category === selectedCategory
-    );
-
     const handleSaveProduct = (pData: Partial<Product>) => {
         if (pData.id) {
-            setProducts((prev) =>
-                prev.map((item) => (item.id === pData.id ? ({ ...item, ...pData } as Product) : item))
-            );
             showToast('Changes saved successfully.');
         } else {
-            const newProduct: Product = {
-                id: `p-${Date.now()}`,
-                productName: pData.productName || 'New Product',
-                imageUrl: pData.imageUrl || '',
-                seller: storeInfo.name,
-                price: pData.price || 0,
-                category: pData.category || 'Artisan',
-                rating: 5.0,
-                stockQuantity: pData.stockQuantity || 0,
-                description: pData.description || '',
-            };
-            setProducts((prev) => [newProduct, ...prev]);
             showToast('Product created successfully.');
         }
     };
@@ -156,6 +151,13 @@ export const SellerDashboard: React.FC = () => {
             showToast(`Order ${order.id} status updated to "${newStatus}".`);
             setPendingStatusChange(null);
         }
+    };
+
+    const handleClearSearch = () => {
+        setValue('productName', '');
+        setValue('page', 0);
+        setCurrentPage(1);
+        handleSubmit();
     };
 
     return (
@@ -183,12 +185,12 @@ export const SellerDashboard: React.FC = () => {
                                 setEditingProduct(null);
                                 setIsProductModalOpen(true);
                             }}
-                            className="px-4 py-2 rounded-xl text-xs font-semibold text-white"
+                            className="px-4 py-2 rounded-xl text-xs font-semibold text-white shadow-sm hover:opacity-95 transition-opacity"
                             style={{ background: 'var(--color-accent)', fontFamily: 'var(--font-display)' }}
                         >
                             + Add Product
                         </button>
-                        <button onClick={onLogout} className="px-3 py-2 rounded-xl text-xs font-medium border" style={{ background: 'rgba(248,113,113,0.12)', color: 'var(--color-danger)', borderColor: 'rgba(248,113,113,0.2)' }}>
+                        <button onClick={onLogout} className="px-3 py-2 rounded-xl text-xs font-medium border transition-colors" style={{ background: 'rgba(248,113,113,0.12)', color: 'var(--color-danger)', borderColor: 'rgba(248,113,113,0.2)' }}>
                             Logout
                         </button>
                     </div>
@@ -219,18 +221,82 @@ export const SellerDashboard: React.FC = () => {
             </header>
 
             <main className="flex-1 px-6 py-8 max-w-7xl mx-auto w-full">
+                {activeTab === 'products' && (
+                    <form
+                        onSubmit={(e) => {
+                            setValue('page', 0);
+                            setCurrentPage(1);
+                            handleSubmit(e);
+                        }}
+                        className="mb-6 flex items-center gap-3"
+                    >
+                        <div
+                            className="relative flex-1 max-w-md flex items-center rounded-xl border transition-all focus-within:ring-2 focus-within:ring-offset-1"
+                            style={{
+                                background: 'var(--color-surface)',
+                                borderColor: 'var(--color-border)',
+                            }}
+                        >
+                            {/* Search Magnifier Icon */}
+                            <svg
+                                className="w-4 h-4 ml-3.5 shrink-0"
+                                style={{ color: 'var(--color-muted)' }}
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+
+                            <input
+                                {...register('productName')}
+                                placeholder="Search products by title or keyword..."
+                                className="w-full bg-transparent px-3 py-2.5 text-xs outline-none placeholder:text-[var(--color-muted)]"
+                                style={{ color: 'var(--color-text)', fontFamily: 'var(--font-body)' }}
+                            />
+
+                            {/* Clear search input button */}
+                            {productNameValue && (
+                                <button
+                                    type="button"
+                                    onClick={handleClearSearch}
+                                    className="mr-2 text-xs w-5 h-5 rounded-full flex items-center justify-center hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+                                    style={{ color: 'var(--color-muted)' }}
+                                >
+                                    ✕
+                                </button>
+                            )}
+                        </div>
+
+                        <button
+                            type="submit"
+                            className="px-5 py-2.5 rounded-xl text-xs font-medium text-white transition-all shadow-sm hover:opacity-95"
+                            style={{ background: 'var(--color-accent)', fontFamily: 'var(--font-display)' }}
+                        >
+                            Search
+                        </button>
+                    </form>
+                )}
+
                 {activeTab === 'products' ? (
                     <ProductGrid
-                        products={filteredProducts}
+                        products={products}
                         categories={CATEGORIES}
                         selectedCategory={selectedCategory}
                         currentPage={currentPage}
                         pageSize={PAGE_SIZE}
                         onSelectCategory={(cat) => {
                             setSelectedCategory(cat);
+                            setValue('category', cat);
+                            setValue('page', 0);
                             setCurrentPage(1);
+                            handleSubmit();
                         }}
-                        onPageChange={setCurrentPage}
+                        onPageChange={(page) => {
+                            setCurrentPage(page);
+                            setValue('page', page - 1);
+                            handleSubmit();
+                        }}
                         onSelectProduct={(p) => {
                             setEditingProduct(p);
                             setIsProductModalOpen(true);

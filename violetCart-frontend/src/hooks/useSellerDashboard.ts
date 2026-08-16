@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { sellerDashboardService } from '@/api/sellerDashboardService';
@@ -17,37 +17,49 @@ export const useSellerDashboard = () => {
     const {
         register,
         handleSubmit,
+        setValue,
+        watch,
         formState: { errors },
     } = useForm<SearchProductFormInput, any, SearchProductFormData>({
         resolver: zodResolver(searchProductSchema),
         defaultValues: {
             productName: '',
-            category: '',
+            category: 'All', // Set default to 'All'
             page: 0,
-            size: 10,
+            size: 8,
             sort: 'productName,ASC',
         },
     });
 
-    const onSubmit = async (data: SearchProductFormData) => {
+    const onSubmit = useCallback(async (data: SearchProductFormData) => {
         setLoading(true);
         setError(null);
         try {
-            const response = await sellerDashboardService.fetchProducts(data);
-            setProducts(response.data);
+            // Adjust category before sending
+            const searchParams = { ...data };
+            if (searchParams.category === 'All') {
+                delete searchParams.category;
+            }
+            const response = await sellerDashboardService.fetchProducts(searchParams);
+            setProducts(response.data.content);
         } catch (err) {
             setError('Failed to fetch products');
         } finally {
             setLoading(false);
         }
-    };
+    }, [setProducts, setLoading, setError]);
+
+    const handleSubmitWrapper = useMemo(() => handleSubmit(onSubmit), [handleSubmit, onSubmit]);
 
     return {
         products,
+        setProducts,
         loading,
         error,
         register,
-        handleSubmit: handleSubmit(onSubmit),
+        handleSubmit: handleSubmitWrapper,
         errors,
+        setValue,
+        watch
     };
 };

@@ -3,7 +3,7 @@ import { useAuthStore } from '../store/useAuthStore';
 
 // Ensure 'export const api' is used here:
 export const api = axios.create({
-    baseURL: 'http://localhost:8080/api/v1',
+    baseURL: '/api/v1',
     headers: {
         'Content-Type': 'application/json',
     },
