@@ -37,8 +37,16 @@ export const addProductSchema = z.object({
         .max(255, 'Description must not exceed 255 characters'),
 });
 
-// Input type: Before transform (price is string, stocksLeft is string)
-export type AddProductFormInput = z.input<typeof addProductSchema>;
+export const searchProductSchema = z.object({
+    productName: z.string().optional(),
+    category: z.string().optional(),
+    page: z.number().int().min(0).optional(),
+    size: z.number().int().min(1).optional(),
+    sort: z.string().optional(),
+});
 
-// Output type: After transform (price is number, stocksLeft is number)
+export type AddProductFormInput = z.input<typeof addProductSchema>;
 export type AddProductFormData = z.output<typeof addProductSchema>;
+
+export type SearchProductFormInput = z.input<typeof searchProductSchema>;
+export type SearchProductFormData = z.output<typeof searchProductSchema>;

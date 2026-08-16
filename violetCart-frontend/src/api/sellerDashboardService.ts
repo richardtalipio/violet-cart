@@ -1,5 +1,5 @@
 import { api } from './axios';
-import type { AddProductFormData } from "@/schemas/sellerDashboardSchema.ts";
+import type { AddProductFormData, SearchProductFormData } from "@/schemas/sellerDashboardSchema.ts";
 import type { ApiResponse } from "@/types/common.ts";
 import type {Product} from "@/components/common/types.ts";
 
@@ -19,6 +19,11 @@ export const sellerDashboardService = {
                 'Content-Type': 'multipart/form-data',
             },
         });
+        return response.data;
+    },
+
+    fetchProducts: async (params: SearchProductFormData): Promise<ApiResponse<Product[]>> => {
+        const response = await api.get<ApiResponse<Product[]>>('/products', { params });
         return response.data;
     }
 };
