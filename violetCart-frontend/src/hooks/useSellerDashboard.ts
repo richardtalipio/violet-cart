@@ -11,6 +11,7 @@ import type { Product } from "@/components/common/types.ts";
 
 export const useSellerDashboard = () => {
     const [products, setProducts] = useState<Product[]>([]);
+    const [categories, setCategories] = useState<string[]>([]);
     const [totalPages, setTotalPages] = useState<number>(0);
     const [totalElements, setTotalElements] = useState<number>(0);
     const [loading, setLoading] = useState<boolean>(false);
@@ -47,18 +48,25 @@ export const useSellerDashboard = () => {
             setProducts(response.data.content ?? []);
             setTotalPages(response.data.totalPages ?? 0);
             setTotalElements(response.data.totalElements ?? 0);
+
+            const responseCategories = await sellerDashboardService.fetchCategories();
+            setCategories(['All', ...responseCategories.data]);
         } catch (err) {
-            setError('Failed to fetch products');
+            setError('Failed to fetch products or categories');
         } finally {
             setLoading(false);
         }
+
+
     }, []);
+
 
     const handleSubmitWrapper = useMemo(() => handleSubmit(onSubmit), [handleSubmit, onSubmit]);
 
     return {
         products,
         setProducts,
+        categories,
         totalPages,
         totalElements,
         loading,

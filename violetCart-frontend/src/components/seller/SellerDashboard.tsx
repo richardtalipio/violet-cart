@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { type Product, type Order, type OrderStatus } from '../common/types';
-import { CATEGORIES } from '../common/mockData';
 import { ProductGrid } from './ProductGrid';
 import { SellerProductModal } from './SellerProductModal';
 import { SellerOrdersTable } from './SellerOrdersTable';
@@ -58,6 +57,7 @@ export const SellerDashboard: React.FC = () => {
     const {
         products,
         setProducts,
+        categories,
         totalPages,
         loading,
         register,
@@ -265,7 +265,7 @@ export const SellerDashboard: React.FC = () => {
                 {activeTab === 'products' ? (
                     <ProductGrid
                         products={products}
-                        categories={CATEGORIES}
+                        categories={categories}
                         selectedCategory={selectedCategory}
                         currentPage={currentPage}
                         pageSize={PAGE_SIZE}

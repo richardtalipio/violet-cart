@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/products")
@@ -82,5 +83,16 @@ public class ProductController {
         }
         Page<RetrieveProductResponse> products = productService.retrieveProducts(criteria, pageable, storeProfileId);
         return ResponseEntity.ok(ApiResponse.success("Products retrieved successfully", products));
+    }
+
+    @GetMapping("/categories")
+    public ResponseEntity<ApiResponse<List<String>>> getCategories() {
+        Long storeProfileId = null;
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof CustomUserDetails) {
+            storeProfileId = ((CustomUserDetails) authentication.getPrincipal()).getStoreProfileId();
+        }
+        List<String> categories = productService.retrieveAllCategories(storeProfileId);
+        return ResponseEntity.ok(ApiResponse.success("Categories retrieved successfully", categories));
     }
 }

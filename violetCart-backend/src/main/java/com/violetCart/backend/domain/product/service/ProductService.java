@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 public interface ProductService {
     /**
@@ -20,5 +21,9 @@ public interface ProductService {
     Product addProduct(AddProductRequest request, Long storeProfileId, Long userAccountId);
 
     Page<RetrieveProductResponse> retrieveProducts(ProductSearchCriteria criteria, Pageable pageable, Long storeProfileId);
+
+    List<String> retrieveAllCategories(Long storeProfileId);
+
+
 }
 

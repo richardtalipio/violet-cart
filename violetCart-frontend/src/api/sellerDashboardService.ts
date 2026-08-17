@@ -42,4 +42,9 @@ export const sellerDashboardService = {
         // Convert binary blob to temporary object URL for <img> tags
         return URL.createObjectURL(response.data);
     },
+
+    fetchCategories: async (): Promise<ApiResponse<string[]>> => {
+        const response = await api.get<ApiResponse<string[]>>('/products/categories');
+        return response.data;
+    },
 };

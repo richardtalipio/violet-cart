@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -91,5 +92,13 @@ public class ProductServiceImpl implements ProductService {
                         .category(product.getCategory())
                         .description(product.getDescription())
                         .build());
+    }
+
+    public List<String> retrieveAllCategories(Long storeProfileId) {
+        if(storeProfileId == null){
+            return productRepository.findDistinctCategories();
+        }else {
+            return productRepository.findDistinctCategoriesByStoreProfileId(storeProfileId);
+        }
     }
 }
