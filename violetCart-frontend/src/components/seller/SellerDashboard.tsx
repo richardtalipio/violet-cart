@@ -6,7 +6,8 @@ import { SellerOrdersTable } from './SellerOrdersTable';
 import { ConfirmModal } from './ConfirmModal';
 import { useAuthStore } from "@/store/useAuthStore.ts";
 import { useNavigate } from "react-router-dom";
-import { useSellerDashboard } from '@/hooks/useSellerDashboard';
+import { useProductManagement } from '@/hooks/useProductManagement';
+import {useUserManagement} from "@/hooks/useUserManagement.ts";
 
 const PAGE_SIZE = 4;
 
@@ -47,9 +48,10 @@ const INITIAL_ORDERS: Order[] = [
 ];
 
 export const SellerDashboard: React.FC = () => {
+    const {loading: userLoading, store} = useUserManagement();
     const storeInfo = {
-        name: "Ana's Artisan Goods",
-        description: 'Authentic handwoven Philippine crafts and sustainable accessories made directly by local weavers in Laguna.',
+        name: store?.storeName,
+        description: store?.storeDescription,
     };
 
     const [activeTab, setActiveTab] = useState<'products' | 'orders'>('products');
@@ -59,12 +61,12 @@ export const SellerDashboard: React.FC = () => {
         setProducts,
         categories,
         totalPages,
-        loading,
-        register,
-        handleSubmit,
-        setValue,
-        watch
-    } = useSellerDashboard();
+        loading: productLoading,
+        searchForm: { register, setValue, watch },
+        handleSearchSubmit: handleSubmit,
+    } = useProductManagement();
+
+    const isLoading = userLoading || productLoading;
 
     const [selectedCategory, setSelectedCategory] = useState('All');
     const [currentPage, setCurrentPage] = useState(1);
@@ -270,7 +272,7 @@ export const SellerDashboard: React.FC = () => {
                         currentPage={currentPage}
                         pageSize={PAGE_SIZE}
                         totalPages={totalPages}
-                        loading={loading} // Pass down to grid
+                        loading={isLoading} // Pass down to grid
                         onSelectCategory={handleCategoryChange}
                         onPageChange={handlePageChange}
                         onSelectProduct={(p) => {

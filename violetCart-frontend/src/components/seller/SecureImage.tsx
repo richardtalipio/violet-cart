@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { sellerDashboardService } from '../../api/sellerDashboardService';
+import {imageService} from "@/api/imageService.ts";
 
 interface SecureImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
     src: string;
@@ -16,7 +16,7 @@ export const SecureImage: React.FC<SecureImageProps> = ({ src, alt, ...props }) 
         const loadImage = async () => {
             setLoading(true);
             try {
-                const url = await sellerDashboardService.fetchImageBlob(src);
+                const url = await imageService.fetchImageBlob(src);
                 if (isMounted) {
                     objectUrl = url;
                     setImageSrc(url);

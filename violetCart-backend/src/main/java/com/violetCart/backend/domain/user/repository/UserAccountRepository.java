@@ -31,7 +31,7 @@ public interface UserAccountRepository extends JpaRepository<UserAccount, Long> 
     )
     FROM UserAccount u
     LEFT JOIN u.storeProfile s
-    LEFT JOIN com.violetCart.backend.domain.product.entity.Product p ON p.storeProfile = s
+    LEFT JOIN s.products p
     WHERE u.role = com.violetCart.backend.domain.user.entity.Role.ROLE_SELLER
     GROUP BY u.id, u.firstName, u.lastName, u.contactNumber, 
              s.storeName, s.storeDescription, u.status, u.createdAt, u.email

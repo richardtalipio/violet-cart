@@ -1,9 +1,9 @@
 import { api } from './axios';
 import type {Seller, UpdateStatusRequest} from "@/components/common/types.ts";
-import type { User} from "@/types/auth.ts";
+import type {StoreProfile, User} from "@/types/auth.ts";
 import type {ApiResponse} from "@/types/common.ts";
 
-export const adminService = {
+export const userService = {
     getSellers: async (): Promise<ApiResponse<Seller[]>> => {
         const response = await api.get<ApiResponse<Seller[]>>('/users/sellers');
         return response.data;
@@ -15,5 +15,10 @@ export const adminService = {
         } as UpdateStatusRequest);
         return response.data;
     },
+
+    fetchStore: async (): Promise<ApiResponse<StoreProfile>> => {
+        const response = await api.get<ApiResponse<StoreProfile>>('/users/myStore');
+        return response.data;
+    }
 
 };

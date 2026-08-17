@@ -1,6 +1,7 @@
 package com.violetCart.backend.domain.user.entity;
 
 import com.violetCart.backend.domain.product.entity.Product;
+import com.violetCart.backend.domain.user.dto.response.StoreProfileResponse;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -44,4 +45,8 @@ public class StoreProfile {
     @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+    public StoreProfileResponse toStoreProfileResponse() {
+        return StoreProfileResponse.builder().storeName(this.storeName).storeDescription(this.storeDescription).build();
+    }
 }

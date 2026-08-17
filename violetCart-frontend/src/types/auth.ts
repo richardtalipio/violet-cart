@@ -13,3 +13,8 @@ export interface AuthResponse {
     role: string;
     status: string;
 }
+
+export interface StoreProfile {
+    storeName: string;
+    storeDescription: string;
+}

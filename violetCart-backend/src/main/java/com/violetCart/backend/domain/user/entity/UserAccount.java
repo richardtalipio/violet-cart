@@ -1,5 +1,6 @@
 package com.violetCart.backend.domain.user.entity;
 
+import com.violetCart.backend.domain.user.dto.response.StoreProfileResponse;
 import com.violetCart.backend.domain.user.dto.response.UserResponse;
 import jakarta.persistence.*;
 import lombok.*;
@@ -96,6 +97,14 @@ public class UserAccount implements UserDetails {
     }
 
     public UserResponse toUserResponse() {
+        StoreProfileResponse profileResponse = null;
+        if (this.getStoreProfile() != null) {
+            profileResponse = StoreProfileResponse.builder()
+                    .storeName(this.getStoreProfile().getStoreName())
+                    .storeDescription(this.getStoreProfile().getStoreDescription())
+                    .build();
+        }
+
         return UserResponse.builder()
                 .id(this.getId())
                 .firstName(this.getFirstName())
@@ -105,6 +114,7 @@ public class UserAccount implements UserDetails {
                 .status(this.getStatus())
                 .createdAt(this.getCreatedAt())
                 .updatedAt(this.getUpdatedAt())
+                .storeProfile(profileResponse)
                 .build();
     }
 }

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { type Product } from '../common/types';
-import {useAddProductModalForm} from "@/hooks/useAddProductModalForm.ts";
+import { useProductManagement } from "@/hooks/useProductManagement";
 
 interface SellerProductModalProps {
     isOpen: boolean;
@@ -19,15 +19,10 @@ export const SellerProductModal: React.FC<SellerProductModalProps> = ({
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const {
-        register,
-        setValue,
-        watch,
-        reset,
-        handleSubmit,
-        errors,
-        isSubmitting,
+        addForm: { register, setValue, watch, reset, formState: { errors, isSubmitting } },
+        handleAddSubmit,
         serverError,
-    } = useAddProductModalForm(() => {
+    } = useProductManagement(() => {
         onClose();
     });
 
@@ -95,7 +90,7 @@ export const SellerProductModal: React.FC<SellerProductModalProps> = ({
                     <button onClick={onClose} className="w-7 h-7 rounded-lg flex items-center justify-center text-lg leading-none" style={{ background: 'var(--color-surface-2)', color: 'var(--color-muted)' }}>×</button>
                 </div>
 
-                <form onSubmit={handleSubmit} className="p-6 overflow-y-auto flex flex-col gap-4">
+                <form onSubmit={handleAddSubmit} className="p-6 overflow-y-auto flex flex-col gap-4">
                     {serverError && (
                         <div className="p-3 text-xs rounded-xl bg-red-500/10 border border-red-500/20 text-red-500">
                             {serverError}

@@ -22,6 +22,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     private final UserAccountRepository userAccountRepository;
 
     @Override
+    @Transactional(readOnly = true)
     public UserResponse getCurrentUserProfile(Long userId) {
         log.info("Getting current user profile details for userId: {}", userId);
         UserAccount userAccount = userAccountRepository.findById(userId)
