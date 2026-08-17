@@ -1,10 +1,13 @@
-package com.violetCart.backend.common.utils;
+package com.violetCart.backend.domain.image.service;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -61,6 +64,25 @@ public class ImageStorageService {
     }
 
     /**
+     * Retrieves an image file as a Resource
+     * @param filename the filename of the image
+     * @return the image file as a Resource
+     */
+    public Resource getImage(String filename) {
+        try {
+            Path filePath = Paths.get(uploadDir).resolve(filename);
+            Resource resource = new UrlResource(filePath.toUri());
+            if (resource.exists() && resource.isReadable()) {
+                return resource;
+            } else {
+                throw new RuntimeException("Could not read the file: " + filename);
+            }
+        } catch (MalformedURLException e) {
+            throw new RuntimeException("Error: " + e.getMessage(), e);
+        }
+    }
+
+    /**
      * Deletes image file from filesystem
      * @param filename the filename to delete
      */
@@ -102,4 +124,3 @@ public class ImageStorageService {
         return filename.substring(filename.lastIndexOf(".") + 1);
     }
 }
-

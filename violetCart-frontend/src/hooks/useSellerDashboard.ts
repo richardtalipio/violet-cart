@@ -11,6 +11,8 @@ import type { Product } from "@/components/common/types.ts";
 
 export const useSellerDashboard = () => {
     const [products, setProducts] = useState<Product[]>([]);
+    const [totalPages, setTotalPages] = useState<number>(0);
+    const [totalElements, setTotalElements] = useState<number>(0);
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -24,7 +26,7 @@ export const useSellerDashboard = () => {
         resolver: zodResolver(searchProductSchema),
         defaultValues: {
             productName: '',
-            category: 'All', // Set default to 'All'
+            category: 'All',
             page: 0,
             size: 8,
             sort: 'productName,ASC',
@@ -35,25 +37,30 @@ export const useSellerDashboard = () => {
         setLoading(true);
         setError(null);
         try {
-            // Adjust category before sending
             const searchParams = { ...data };
             if (searchParams.category === 'All') {
                 delete searchParams.category;
             }
             const response = await sellerDashboardService.fetchProducts(searchParams);
-            setProducts(response.data.content);
+
+            // Extract Spring Boot Page metadata
+            setProducts(response.data.content ?? []);
+            setTotalPages(response.data.totalPages ?? 0);
+            setTotalElements(response.data.totalElements ?? 0);
         } catch (err) {
             setError('Failed to fetch products');
         } finally {
             setLoading(false);
         }
-    }, [setProducts, setLoading, setError]);
+    }, []);
 
     const handleSubmitWrapper = useMemo(() => handleSubmit(onSubmit), [handleSubmit, onSubmit]);
 
     return {
         products,
         setProducts,
+        totalPages,
+        totalElements,
         loading,
         error,
         register,

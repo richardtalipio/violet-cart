@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useRef} from 'react';
+import React, { useState, useEffect } from 'react';
 import { type Product, type Order, type OrderStatus } from '../common/types';
 import { CATEGORIES } from '../common/mockData';
 import { ProductGrid } from './ProductGrid';
@@ -9,7 +9,7 @@ import { useAuthStore } from "@/store/useAuthStore.ts";
 import { useNavigate } from "react-router-dom";
 import { useSellerDashboard } from '@/hooks/useSellerDashboard';
 
-const PAGE_SIZE = 8;
+const PAGE_SIZE = 4;
 
 const INITIAL_ORDERS: Order[] = [
     {
@@ -45,39 +45,6 @@ const INITIAL_ORDERS: Order[] = [
         },
         breakdown: { subtotal: 1810, shippingFee: 100, discount: 0, total: 1910 },
     },
-    {
-        id: 'ORD-102',
-        customerName: 'Maria Santos',
-        orderDate: '2026-05-19',
-        status: 'To Ship',
-        items: [
-            {
-                id: 'p8',
-                productName: 'Woven Abaca Placemats (Set of 4)',
-                image: 'https://images.unsplash.com/photo-1577083552431-6e5fd01aa342?w=300&auto=format&fit=crop&q=80',
-                price: 480,
-                priceFormatted: '₱480',
-                quantity: 1,
-            },
-            {
-                id: 'p12',
-                productName: 'Handcrafted Rattan Coasters (Set of 6)',
-                image: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=300&auto=format&fit=crop&q=80',
-                price: 320,
-                priceFormatted: '₱320',
-                quantity: 3,
-            },
-        ],
-        shippingAddress: {
-            fullName: 'Maria Santos',
-            phone: '+63 918 987 6543',
-            street: '45 Luna Avenue',
-            city: 'Quezon City',
-            province: 'Metro Manila',
-            postalCode: '1100',
-        },
-        breakdown: { subtotal: 1440, shippingFee: 80, discount: 0, total: 1520 },
-    },
 ];
 
 export const SellerDashboard: React.FC = () => {
@@ -87,7 +54,17 @@ export const SellerDashboard: React.FC = () => {
     };
 
     const [activeTab, setActiveTab] = useState<'products' | 'orders'>('products');
-    const { products, setProducts, register, handleSubmit, setValue, watch } = useSellerDashboard();
+
+    const {
+        products,
+        setProducts,
+        totalPages,
+        loading,
+        register,
+        handleSubmit,
+        setValue,
+        watch
+    } = useSellerDashboard();
 
     const [selectedCategory, setSelectedCategory] = useState('All');
     const [currentPage, setCurrentPage] = useState(1);
@@ -103,16 +80,11 @@ export const SellerDashboard: React.FC = () => {
     const logout = useAuthStore((state) => state.logout);
     const navigate = useNavigate();
 
-    // Watch search value for conditional UI (like clear button)
     const productNameValue = watch ? watch('productName') : '';
 
-    const isMounted = useRef(false);
-
+    // Trigger initial fetch on mount
     useEffect(() => {
-        if (!isMounted.current) {
-            handleSubmit();
-            isMounted.current = true;
-        }
+        handleSubmit();
     }, [handleSubmit]);
 
     const onLogout = () => {
@@ -157,6 +129,20 @@ export const SellerDashboard: React.FC = () => {
         setValue('productName', '');
         setValue('page', 0);
         setCurrentPage(1);
+        handleSubmit();
+    };
+
+    const handleCategoryChange = (category: string) => {
+        setSelectedCategory(category);
+        setValue('category', category);
+        setValue('page', 0);
+        setCurrentPage(1);
+        handleSubmit();
+    };
+
+    const handlePageChange = (page: number) => {
+        setCurrentPage(page);
+        setValue('page', page - 1); // Convert 1-based UI index to 0-based Spring Boot index
         handleSubmit();
     };
 
@@ -237,7 +223,6 @@ export const SellerDashboard: React.FC = () => {
                                 borderColor: 'var(--color-border)',
                             }}
                         >
-                            {/* Search Magnifier Icon */}
                             <svg
                                 className="w-4 h-4 ml-3.5 shrink-0"
                                 style={{ color: 'var(--color-muted)' }}
@@ -255,7 +240,6 @@ export const SellerDashboard: React.FC = () => {
                                 style={{ color: 'var(--color-text)', fontFamily: 'var(--font-body)' }}
                             />
 
-                            {/* Clear search input button */}
                             {productNameValue && (
                                 <button
                                     type="button"
@@ -285,18 +269,10 @@ export const SellerDashboard: React.FC = () => {
                         selectedCategory={selectedCategory}
                         currentPage={currentPage}
                         pageSize={PAGE_SIZE}
-                        onSelectCategory={(cat) => {
-                            setSelectedCategory(cat);
-                            setValue('category', cat);
-                            setValue('page', 0);
-                            setCurrentPage(1);
-                            handleSubmit();
-                        }}
-                        onPageChange={(page) => {
-                            setCurrentPage(page);
-                            setValue('page', page - 1);
-                            handleSubmit();
-                        }}
+                        totalPages={totalPages}
+                        loading={loading} // Pass down to grid
+                        onSelectCategory={handleCategoryChange}
+                        onPageChange={handlePageChange}
                         onSelectProduct={(p) => {
                             setEditingProduct(p);
                             setIsProductModalOpen(true);

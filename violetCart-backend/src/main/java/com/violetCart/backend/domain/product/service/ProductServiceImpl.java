@@ -1,6 +1,6 @@
 package com.violetCart.backend.domain.product.service;
 
-import com.violetCart.backend.common.utils.ImageStorageService;
+import com.violetCart.backend.domain.image.service.ImageStorageService;
 import com.violetCart.backend.domain.product.dto.AddProductRequest;
 import com.violetCart.backend.domain.product.dto.ProductSearchCriteria;
 import com.violetCart.backend.domain.product.dto.RetrieveProductResponse;
