@@ -9,6 +9,7 @@ interface ProductGridProps {
     selectedCategory: string;
     currentPage: number;
     pageSize: number;
+    totalPages: number;
     onSelectCategory: (category: string) => void;
     onPageChange: (page: number) => void;
     onSelectProduct: (product: Product) => void;
@@ -21,15 +22,15 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
                                                             selectedCategory,
                                                             currentPage,
                                                             pageSize,
+                                                            totalPages,
                                                             onSelectCategory,
                                                             onPageChange,
                                                             onSelectProduct,
                                                             onAddToCart,
                                                         }) => {
-    // 1. Calculate Pagination Range
-    const totalPages = Math.ceil(products.length / pageSize);
+    // 1. Pagination is handled by backend, so use props directly
+    const paginatedProducts = products;
     const startIndex = (currentPage - 1) * pageSize;
-    const paginatedProducts = products.slice(startIndex, startIndex + pageSize);
 
     return (
         <main className="flex-1 px-6 py-8 max-w-7xl mx-auto w-full flex flex-col gap-6">

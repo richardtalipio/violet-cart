@@ -1,6 +1,6 @@
 import React from 'react';
 import { type Product } from '../common/types';
-import {SecureImage} from "@/components/seller/SecureImage.tsx";
+import {SecureImage} from "@/components/common/SecureImage.tsx";
 
 interface ProductGridProps {
     products: Product[];

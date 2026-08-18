@@ -16,7 +16,7 @@ export interface Product {
     id: string;
     productName: string;
     imageUrl: string;
-    seller: string;
+    storeName: string;
     price: number;
     category: string;
     rating: number;

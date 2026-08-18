@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import type { Seller } from "@/components/common/types.ts";
-import { useUserManagement } from "@/hooks/useUserManagement.ts";
+import { useSellers } from "@/hooks/useSellers.ts";
 
 const SELLER_STATUS: Record<string, { color: string; bg: string }> = {
     ACTIVE: { color: '#34d399', bg: 'rgba(52,211,153,0.12)' },
@@ -10,7 +10,7 @@ const SELLER_STATUS: Record<string, { color: string; bg: string }> = {
 };
 
 export const SellerTab: React.FC = () => {
-    const { sellers, updateSellerStatus, loading, error } = useUserManagement();
+    const { sellers, updateSellerStatus, loading, error } = useSellers();
     const [sellerSearch, setSellerSearch] = useState('');
     const [sellerSort, setSellerSort] = useState<{ col: keyof Seller; dir: 'asc' | 'desc' }>({
         col: 'fullName',

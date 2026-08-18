@@ -75,6 +75,7 @@ public class Product {
                 .rating(this.rating)
                 .category(this.category)
                 .description(this.description)
+                .storeName(this.storeProfile.getStoreName())
                 .build();
     }
 }

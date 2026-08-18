@@ -1,5 +1,6 @@
 import React from 'react';
-import type {Product} from "@/components/common/types.ts";
+import type { Product } from "@/components/common/types.ts";
+import { SecureImage } from '@/components/common/SecureImage'; // Import SecureImage component
 
 interface ProductCardProps {
     product: Product;
@@ -8,8 +9,12 @@ interface ProductCardProps {
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelect, onAddToCart }) => {
-    const isOutOfStock = product.stockQuantity <= 0;
-    const isLowStock = product.stockQuantity > 0 && product.stockQuantity <= 5;
+    // Safely fallback to 0 if stockQuantity or rating is missing
+    const stockQuantity = product?.stockQuantity ?? 0;
+    const rating = product?.rating ?? 0;
+
+    const isOutOfStock = stockQuantity <= 0;
+    const isLowStock = stockQuantity > 0 && stockQuantity <= 5;
 
     return (
         <div
@@ -18,18 +23,17 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelect, onA
             style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)' }}
         >
             <div className="aspect-square w-full overflow-hidden bg-surface-2 relative">
-                <img
-                    src={product.imageUrl}
-                    alt={product.productName}
+                <SecureImage
+                    src={product?.imageUrl || ''}
+                    alt={product?.productName || 'Product'}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />
 
-                {/* Rating & Review Count Badge */}
                 <span
                     className="absolute top-3 right-3 text-[10px] font-bold px-2 py-0.5 rounded-md backdrop-blur-md flex items-center gap-1"
                     style={{ background: 'rgba(0,0,0,0.6)', color: '#fbbf24', fontFamily: 'var(--font-mono)' }}
                 >
-                    ★ {product.rating.toFixed(1)}
+                    ★ {rating.toFixed(1)}
                 </span>
             </div>
 
@@ -37,10 +41,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelect, onA
                 <div>
                     <div className="flex items-center justify-between">
                         <p className="text-xs font-medium" style={{ color: 'var(--color-muted)', fontFamily: 'var(--font-mono)' }}>
-                            {product.seller}
+                            {product?.storeName || 'Unknown Seller'}
                         </p>
 
-                        {/* Stock Left Indicator */}
                         <span
                             className="text-[10px] font-semibold"
                             style={{
@@ -52,18 +55,18 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelect, onA
                                         : 'var(--color-muted)',
                             }}
                         >
-                            {isOutOfStock ? 'Out of stock' : `${product.stockQuantity} left`}
+                            {isOutOfStock ? 'Out of stock' : `${stockQuantity} left`}
                         </span>
                     </div>
 
                     <h3 className="text-sm font-semibold mt-1" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-text)' }}>
-                        {product.productName}
+                        {product?.productName || 'Unnamed Product'}
                     </h3>
                 </div>
 
                 <div className="flex items-center justify-between pt-2 border-t" style={{ borderColor: 'var(--color-border)' }}>
                     <p className="text-sm font-bold" style={{ fontFamily: 'var(--font-mono)', color: 'var(--color-text)' }}>
-                        ₱{product.price}
+                        ₱{product?.price ?? 0}
                     </p>
                     <button
                         disabled={isOutOfStock}

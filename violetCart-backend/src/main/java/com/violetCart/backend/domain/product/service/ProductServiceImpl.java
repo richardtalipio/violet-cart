@@ -83,15 +83,7 @@ public class ProductServiceImpl implements ProductService {
         }
 
         return productRepository.findAll(spec, pageable)
-                .map(product -> RetrieveProductResponse.builder()
-                        .id(product.getId())
-                        .imageUrl(product.getImageUrl())
-                        .productName(product.getProductName())
-                        .price(product.getPrice())
-                        .stockQuantity(product.getStockQuantity())
-                        .category(product.getCategory())
-                        .description(product.getDescription())
-                        .build());
+                .map(Product::toRetrieveProductResponse);
     }
 
     public List<String> retrieveAllCategories(Long storeProfileId) {

@@ -7,48 +7,14 @@ import { ConfirmModal } from './ConfirmModal';
 import { useAuthStore } from "@/store/useAuthStore.ts";
 import { useNavigate } from "react-router-dom";
 import { useProductManagement } from '@/hooks/useProductManagement';
-import {useUserManagement} from "@/hooks/useUserManagement.ts";
+import { useStoreProfile } from "@/hooks/useStoreProfile.ts";
+import {MOCK_ORDERS} from "@/components/storefront/mockData.ts";
 
 const PAGE_SIZE = 4;
 
-const INITIAL_ORDERS: Order[] = [
-    {
-        id: 'ORD-101',
-        customerName: 'Juan Dela Cruz',
-        orderDate: '2026-05-18',
-        status: 'Paid',
-        items: [
-            {
-                id: 'p1',
-                productName: 'Handwoven Bayong Bag',
-                image: 'https://images.unsplash.com/photo-1590874103328-eac38a683ce7?w=300&auto=format&fit=crop&q=80',
-                price: 850,
-                priceFormatted: '₱850',
-                quantity: 1,
-            },
-            {
-                id: 'p8',
-                productName: 'Woven Abaca Placemats (Set of 4)',
-                image: 'https://images.unsplash.com/photo-1577083552431-6e5fd01aa342?w=300&auto=format&fit=crop&q=80',
-                price: 480,
-                priceFormatted: '₱480',
-                quantity: 2,
-            },
-        ],
-        shippingAddress: {
-            fullName: 'Juan Dela Cruz',
-            phone: '+63 917 123 4567',
-            street: '123 Rizal Street, Brgy. San Antonio',
-            city: 'San Pablo City',
-            province: 'Laguna',
-            postalCode: '4000',
-        },
-        breakdown: { subtotal: 1810, shippingFee: 100, discount: 0, total: 1910 },
-    },
-];
 
 export const SellerDashboard: React.FC = () => {
-    const {loading: userLoading, store} = useUserManagement();
+    const {loading: userLoading, store} = useStoreProfile();
     const storeInfo = {
         name: store?.storeName,
         description: store?.storeDescription,
@@ -73,7 +39,7 @@ export const SellerDashboard: React.FC = () => {
 
     const [isProductModalOpen, setIsProductModalOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-    const [orders, setOrders] = useState<Order[]>(INITIAL_ORDERS);
+    const [orders, setOrders] = useState<Order[]>(MOCK_ORDERS);
 
     const [toastMessage, setToastMessage] = useState<string | null>(null);
     const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);

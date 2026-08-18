@@ -18,5 +18,6 @@ public class RetrieveProductResponse {
     private Double rating;
     private String category;
     private String description;
+    private String storeName;
 
 }

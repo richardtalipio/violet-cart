@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import type {Product} from "@/components/common/types.ts";
+import type { Product } from "@/components/common/types.ts";
+import { SecureImage } from '@/components/common/SecureImage'; // Import SecureImage
 
 interface ProductDetailModalProps {
     product: Product | null;
@@ -17,6 +18,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
     const [userRating, setUserRating] = useState<number>(0);
     const [hoverRating, setHoverRating] = useState<number>(0);
     const [hasSubmitted, setHasSubmitted] = useState<boolean>(false);
+    const [isZoomed, setIsZoomed] = useState<boolean>(false);
 
     if (!product) return null;
 
@@ -71,12 +73,34 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 
                 {/* Modal Body */}
                 <div className="p-6 overflow-y-auto flex flex-col gap-5">
-                    <img
-                        src={product.imageUrl}
-                        alt={product.productName}
-                        className="w-full h-48 object-cover rounded-xl border"
-                        style={{ borderColor: 'var(--color-border)' }}
-                    />
+                    <div className="w-full h-48 rounded-xl border overflow-hidden relative" style={{ borderColor: 'var(--color-border)' }}>
+                        <SecureImage
+                            src={product.imageUrl || ''}
+                            alt={product.productName}
+                            className="w-full h-full object-cover cursor-pointer"
+                            onClick={() => setIsZoomed(true)}
+                        />
+                    </div>
+
+                    {isZoomed && (
+                        <div
+                            className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4"
+                            onClick={() => setIsZoomed(false)}
+                        >
+                            <button
+                                className="absolute top-4 right-4 text-white text-3xl font-bold p-2"
+                                onClick={() => setIsZoomed(false)}
+                            >
+                                ×
+                            </button>
+                            <SecureImage
+                                src={product.imageUrl || ''}
+                                alt={product.productName}
+                                className="max-h-full max-w-full object-contain"
+                                onClick={(e) => e.stopPropagation()}
+                            />
+                        </div>
+                    )}
 
                     <div>
                         <div className="flex items-center justify-between">
@@ -107,7 +131,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                             {product.productName}
                         </h3>
                         <p className="text-xs" style={{ color: 'var(--color-muted)' }}>
-                            Sold by {product.seller}
+                            Sold by {product.storeName}
                         </p>
                     </div>
 
