@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import type { Product } from "@/components/common/types.ts";
-import { SecureImage } from '@/components/common/SecureImage'; // Import SecureImage
+import { SecureImage } from '@/components/common/SecureImage';
 
 interface ProductDetailModalProps {
     product: Product | null;
+    cartQuantity?: number;
     onClose: () => void;
     onAddToCart: (product: Product) => void;
     onSubmitRating?: (productId: string, rating: number) => void;
@@ -11,6 +12,7 @@ interface ProductDetailModalProps {
 
 export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                                                                           product,
+                                                                          cartQuantity = 0,
                                                                           onClose,
                                                                           onAddToCart,
                                                                           onSubmitRating,
@@ -22,14 +24,19 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 
     if (!product) return null;
 
-    const isOutOfStock = product.stockQuantity <= 0;
-    const isLowStock = product.stockQuantity > 0 && product.stockQuantity <= 5;
+    const remainingStock = product.stockQuantity - cartQuantity;
+    const isOutOfStock = remainingStock <= 0;
+    const isLowStock = remainingStock > 0 && remainingStock <= 5;
+
+    // Format current rating metrics safely
+    const currentRating = product.rating ? Number(product.rating).toFixed(1) : '0.0';
+    const totalReviews = (product as unknown as { reviewCount?: number }).reviewCount ?? 0;
 
     const handleRatingSubmit = (ratingValue: number) => {
         setUserRating(ratingValue);
         setHasSubmitted(true);
         if (onSubmitRating) {
-            onSubmitRating(product.id, ratingValue);
+            onSubmitRating(String(product.id), ratingValue);
         }
     };
 
@@ -64,7 +71,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                     </h2>
                     <button
                         onClick={handleCloseModal}
-                        className="w-7 h-7 rounded-lg flex items-center justify-center text-lg leading-none"
+                        className="w-7 h-7 rounded-lg flex items-center justify-center text-lg leading-none cursor-pointer hover:opacity-80 transition-opacity"
                         style={{ background: 'var(--color-surface-2)', color: 'var(--color-muted)' }}
                     >
                         ×
@@ -77,18 +84,19 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                         <SecureImage
                             src={product.imageUrl || ''}
                             alt={product.productName}
-                            className="w-full h-full object-cover cursor-pointer"
+                            className="w-full h-full object-cover cursor-pointer hover:scale-105 transition-transform duration-300"
                             onClick={() => setIsZoomed(true)}
                         />
                     </div>
 
+                    {/* Image Zoom Modal */}
                     {isZoomed && (
                         <div
-                            className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4"
+                            className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4 cursor-pointer"
                             onClick={() => setIsZoomed(false)}
                         >
                             <button
-                                className="absolute top-4 right-4 text-white text-3xl font-bold p-2"
+                                className="absolute top-4 right-4 text-white text-3xl font-bold p-2 cursor-pointer"
                                 onClick={() => setIsZoomed(false)}
                             >
                                 ×
@@ -123,14 +131,32 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                                             : 'var(--color-muted)',
                                 }}
                             >
-                                {isOutOfStock ? 'Out of Stock' : `${product.stockQuantity} left in stock`}
+                                {isOutOfStock
+                                    ? (product.stockQuantity === 0 ? 'Out of Stock' : 'Max stock added to cart')
+                                    : `${remainingStock} left in stock`}
                             </span>
                         </div>
 
-                        <h3 className="text-lg font-bold mt-2" style={{ fontFamily: 'var(--font-display)' }}>
-                            {product.productName}
-                        </h3>
-                        <p className="text-xs" style={{ color: 'var(--color-muted)' }}>
+                        <div className="flex items-start justify-between gap-2 mt-2">
+                            <h3 className="text-lg font-bold" style={{ fontFamily: 'var(--font-display)' }}>
+                                {product.productName}
+                            </h3>
+
+                            {/* Current Product Rating Badge */}
+                            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border flex-shrink-0" style={{ background: 'var(--color-surface-2)', borderColor: 'var(--color-border)' }}>
+                                <span className="text-amber-400 text-sm">★</span>
+                                <span className="text-xs font-bold" style={{ fontFamily: 'var(--font-mono)', color: 'var(--color-text)' }}>
+                                    {currentRating}
+                                </span>
+                                {totalReviews > 0 && (
+                                    <span className="text-[10px]" style={{ color: 'var(--color-muted)' }}>
+                                        ({totalReviews})
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+
+                        <p className="text-xs mt-1" style={{ color: 'var(--color-muted)' }}>
                             Sold by {product.storeName}
                         </p>
                     </div>
@@ -139,7 +165,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                         {product.description}
                     </p>
 
-                    {/* Interactive User Rating Section */}
+                    {/* Rating Section */}
                     <div
                         className="p-4 rounded-xl border flex flex-col gap-2"
                         style={{ background: 'var(--color-surface-2)', borderColor: 'var(--color-border)' }}
@@ -148,34 +174,38 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                             <span className="text-xs font-semibold" style={{ fontFamily: 'var(--font-display)' }}>
                                 Rate this Product
                             </span>
-                            <span className="text-[10px]" style={{ color: 'var(--color-muted)', fontFamily: 'var(--font-mono)' }}>
-                                Overall: ★ {product.rating.toFixed(1)}
+                            <span className="text-[10px] font-medium" style={{ color: 'var(--color-muted)', fontFamily: 'var(--font-mono)' }}>
+                                Average: ★ {currentRating} / 5.0
                             </span>
                         </div>
 
                         {hasSubmitted ? (
-                            <p className="text-xs font-medium text-emerald-400">
-                                Thank you! You rated this {userRating} ★
-                            </p>
+                            <div className="flex items-center gap-2 mt-1">
+                                <span className="text-xs font-semibold text-emerald-400">
+                                    ✓ You rated this {userRating} ★
+                                </span>
+                            </div>
                         ) : (
-                            <div className="flex items-center gap-1 mt-1">
-                                {[1, 2, 3, 4, 5].map((star) => (
-                                    <button
-                                        key={star}
-                                        type="button"
-                                        onClick={() => handleRatingSubmit(star)}
-                                        onMouseEnter={() => setHoverRating(star)}
-                                        onMouseLeave={() => setHoverRating(0)}
-                                        className="text-lg transition-transform hover:scale-110 focus:outline-none"
-                                        style={{
-                                            color: star <= (hoverRating || userRating) ? '#fbbf24' : 'var(--color-border)',
-                                        }}
-                                    >
-                                        ★
-                                    </button>
-                                ))}
-                                <span className="text-xs ml-2" style={{ color: 'var(--color-muted)' }}>
-                                    {hoverRating ? `${hoverRating} Stars` : 'Select stars to submit'}
+                            <div className="flex items-center justify-between mt-1">
+                                <div className="flex items-center gap-1">
+                                    {[1, 2, 3, 4, 5].map((star) => (
+                                        <button
+                                            key={star}
+                                            type="button"
+                                            onClick={() => handleRatingSubmit(star)}
+                                            onMouseEnter={() => setHoverRating(star)}
+                                            onMouseLeave={() => setHoverRating(0)}
+                                            className="text-lg transition-transform hover:scale-125 focus:outline-none cursor-pointer"
+                                            style={{
+                                                color: star <= (hoverRating || userRating) ? '#fbbf24' : 'var(--color-border)',
+                                            }}
+                                        >
+                                            ★
+                                        </button>
+                                    ))}
+                                </div>
+                                <span className="text-xs" style={{ color: 'var(--color-muted)' }}>
+                                    {hoverRating ? `${hoverRating} Stars` : 'Tap to rate'}
                                 </span>
                             </div>
                         )}
@@ -185,7 +215,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                 {/* Footer Action */}
                 <div className="p-6 border-t flex items-center justify-between" style={{ borderColor: 'var(--color-border)' }}>
                     <span className="text-lg font-bold" style={{ fontFamily: 'var(--font-mono)' }}>
-                        ₱{product.price}
+                        ₱{product.price.toLocaleString()}
                     </span>
                     <button
                         disabled={isOutOfStock}
@@ -193,10 +223,10 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                             onAddToCart(product);
                             handleCloseModal();
                         }}
-                        className="px-5 py-2.5 rounded-xl text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+                        className="px-5 py-2.5 rounded-xl text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                         style={{ background: 'var(--color-accent)', fontFamily: 'var(--font-display)' }}
                     >
-                        {isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
+                        {isOutOfStock ? (product.stockQuantity === 0 ? 'Out of Stock' : 'Max Limit Reached') : 'Add to Cart'}
                     </button>
                 </div>
             </div>

@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { cartService } from '@/api/cartService';
 import type { CartItemResponse, AddToCartRequest } from '@/components/storefront/types';
 
-export const useCartManagement = (userId: number) => {
+export const useCartManagement = () => {
     const [cartItems, setCartItems] = useState<CartItemResponse[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
@@ -11,19 +11,19 @@ export const useCartManagement = (userId: number) => {
         setIsLoading(true);
         setError(null);
         try {
-            const response = await cartService.getCart(userId);
+            const response = await cartService.getCart();
             setCartItems(response.data);
         } catch (err) {
             setError('Failed to fetch cart');
         } finally {
             setIsLoading(false);
         }
-    }, [userId]);
+    }, []);
 
     const addItemToCart = async (request: AddToCartRequest) => {
         setError(null);
         try {
-            await cartService.addToCart(userId, request);
+            await cartService.addToCart(request);
             await fetchCart();
         } catch (err) {
             setError('Failed to add item to cart');

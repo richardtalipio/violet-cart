@@ -76,11 +76,10 @@ public class CartServiceImpl implements CartService {
 
     @Transactional
     public void updateQuantity(String cartItemId, Integer quantity) {
-        Long cartItemIdLong = Long.valueOf(cartItemId);
         if (quantity <= 0) {
-            cartItemRepository.deleteById(cartItemIdLong);
+            cartItemRepository.deleteById(cartItemId);
         } else {
-            cartItemRepository.findById(cartItemIdLong).ifPresent(item -> {
+            cartItemRepository.findById(cartItemId).ifPresent(item -> {
                 item.setQuantity(quantity);
                 cartItemRepository.save(item);
             });
@@ -89,8 +88,7 @@ public class CartServiceImpl implements CartService {
 
     @Transactional
     public void removeItem(String cartItemId) {
-        Long cartItemIdLong = Long.valueOf(cartItemId);
-        cartItemRepository.deleteById(cartItemIdLong);
+        cartItemRepository.deleteById(cartItemId);
     }
 
     private BigDecimal computeSubtotal(Integer quantity, BigDecimal price) {

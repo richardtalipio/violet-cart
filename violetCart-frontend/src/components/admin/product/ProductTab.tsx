@@ -6,7 +6,7 @@ const PRODUCTS: Product[] = [
         id: '1',
         productName: 'Handwoven Bayong Bag',
         imageUrl: 'https://images.unsplash.com/photo-1590874103328-eac38a683ce7?w=150&auto=format&fit=crop&q=80',
-        seller: "Ana's Artisan Goods",
+        storeName: "Ana's Artisan Goods",
         price: 850,
         category: 'Fashion',
         rating: 4.8,
@@ -17,7 +17,7 @@ const PRODUCTS: Product[] = [
         id: '2',
         productName: 'Carved Wooden Stool',
         imageUrl: 'https://images.unsplash.com/photo-1503602642458-232111445657?w=150&auto=format&fit=crop&q=80',
-        seller: 'Ocampo Crafts',
+        storeName: 'Ocampo Crafts',
         price: 2000,
         category: 'Home & Living',
         rating: 4.5,
@@ -28,7 +28,7 @@ const PRODUCTS: Product[] = [
         id: '3',
         productName: 'Retro Collectible Card Box',
         imageUrl: 'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=150&auto=format&fit=crop&q=80',
-        seller: 'CR Collectibles',
+        storeName: 'CR Collectibles',
         price: 4500,
         category: 'Collectibles',
         rating: 2.3,
@@ -39,7 +39,7 @@ const PRODUCTS: Product[] = [
         id: '4',
         productName: 'Minimalist Ceramic Vase',
         imageUrl: 'https://images.unsplash.com/photo-1612196808214-b8e1d6145a8c?w=150&auto=format&fit=crop&q=80',
-        seller: 'Flores Home PH',
+        storeName: 'Flores Home PH',
         price: 500,
         category: 'Home Decor',
         rating: 4.9,
@@ -50,7 +50,7 @@ const PRODUCTS: Product[] = [
         id: '5',
         productName: 'Wireless Mechanical Keyboard',
         imageUrl: 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=150&auto=format&fit=crop&q=80',
-        seller: 'EduTech Gadgets',
+        storeName: 'EduTech Gadgets',
         price: 2500,
         category: 'Electronics',
         rating: 4.2,
@@ -61,7 +61,7 @@ const PRODUCTS: Product[] = [
         id: '6',
         productName: 'Organic Lip & Cheek Tint',
         imageUrl: 'https://images.unsplash.com/photo-1586495777744-4413f21062fa?w=150&auto=format&fit=crop&q=80',
-        seller: 'Jasmine Organics',
+        storeName: 'Jasmine Organics',
         price: 250,
         category: 'Beauty',
         rating: 5.0,
@@ -103,7 +103,7 @@ export const ProductTab: React.FC = () => {
         .filter(
             (p) =>
                 p.productName.toLowerCase().includes(productSearch.toLowerCase()) ||
-                p.seller.toLowerCase().includes(productSearch.toLowerCase()) ||
+                p.storeName.toLowerCase().includes(productSearch.toLowerCase()) ||
                 p.category.toLowerCase().includes(productSearch.toLowerCase())
         )
         .sort((a, b) => {
@@ -164,7 +164,7 @@ export const ProductTab: React.FC = () => {
                         </h2>
                         <input
                             type="text"
-                            placeholder="Search product, seller, category…"
+                            placeholder="Search product, storeName, category…"
                             value={productSearch}
                             onChange={(e) => setProductSearch(e.target.value)}
                             className="text-xs px-3 py-1.5 rounded-lg outline-none w-60"
@@ -222,7 +222,7 @@ export const ProductTab: React.FC = () => {
                                             {p.productName}
                                         </p>
                                         <p style={{ color: 'var(--color-muted)', fontFamily: 'var(--font-mono)', fontSize: 10 }}>
-                                            {p.seller}
+                                            {p.storeName}
                                         </p>
                                     </td>
                                     <td className="px-5 py-3.5" style={{ color: 'var(--color-text)' }}>
@@ -287,7 +287,7 @@ export const ProductTab: React.FC = () => {
                                         {selectedProduct.productName}
                                     </p>
                                     <p className="text-xs mt-0.5 truncate" style={{ color: 'var(--color-muted)' }}>
-                                        By {selectedProduct.seller}
+                                        By {selectedProduct.storeName}
                                     </p>
                                 </div>
                             </div>

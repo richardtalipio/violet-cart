@@ -4,17 +4,27 @@ import { SecureImage } from '@/components/common/SecureImage'; // Import SecureI
 
 interface ProductCardProps {
     product: Product;
+    isAddToCartDisabled?: boolean; // Prop to indicate if button should be disabled via cart count
+    cartQuantity?: number; // Optional direct count of items in cart
     onSelect: (product: Product) => void;
     onAddToCart: (product: Product) => void;
 }
 
-export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelect, onAddToCart }) => {
+export const ProductCard: React.FC<ProductCardProps> = ({
+                                                            product,
+                                                            isAddToCartDisabled,
+                                                            cartQuantity = 0,
+                                                            onSelect,
+                                                            onAddToCart
+                                                        }) => {
     // Safely fallback to 0 if stockQuantity or rating is missing
     const stockQuantity = product?.stockQuantity ?? 0;
     const rating = product?.rating ?? 0;
 
+    const remainingStock = stockQuantity - cartQuantity;
     const isOutOfStock = stockQuantity <= 0;
-    const isLowStock = stockQuantity > 0 && stockQuantity <= 5;
+    const isMaxInCart = isAddToCartDisabled ?? (remainingStock <= 0);
+    const isLowStock = remainingStock > 0 && remainingStock <= 5;
 
     return (
         <div
@@ -48,14 +58,18 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelect, onA
                             className="text-[10px] font-semibold"
                             style={{
                                 fontFamily: 'var(--font-mono)',
-                                color: isOutOfStock
+                                color: isOutOfStock || isMaxInCart
                                     ? 'var(--color-danger)'
                                     : isLowStock
                                         ? '#f59e0b'
                                         : 'var(--color-muted)',
                             }}
                         >
-                            {isOutOfStock ? 'Out of stock' : `${stockQuantity} left`}
+                            {isOutOfStock
+                                ? 'Out of stock'
+                                : isMaxInCart
+                                    ? 'Max in cart'
+                                    : `${remainingStock} left`}
                         </span>
                     </div>
 
@@ -69,7 +83,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelect, onA
                         ₱{product?.price ?? 0}
                     </p>
                     <button
-                        disabled={isOutOfStock}
+                        disabled={isMaxInCart}
                         onClick={(e) => {
                             e.stopPropagation();
                             onAddToCart(product);
@@ -77,7 +91,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelect, onA
                         className="text-xs px-3 py-1.5 rounded-lg font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
                         style={{ background: 'var(--color-accent)', fontFamily: 'var(--font-display)' }}
                     >
-                        {isOutOfStock ? 'Sold Out' : '+ Add'}
+                        {isOutOfStock ? 'Sold Out' : isMaxInCart ? 'Max Limit' : '+ Add'}
                     </button>
                 </div>
             </div>

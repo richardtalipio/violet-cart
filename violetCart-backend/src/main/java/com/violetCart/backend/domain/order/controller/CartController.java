@@ -4,7 +4,9 @@ import com.violetCart.backend.common.response.ApiResponse;
 import com.violetCart.backend.domain.order.dto.AddToCartRequest;
 import com.violetCart.backend.domain.order.dto.CartItemResponse;
 import com.violetCart.backend.domain.order.service.CartService;
+import com.violetCart.backend.domain.user.entity.CustomUserDetails;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,19 +22,19 @@ public class CartController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<CartItemResponse>>> getCart(@RequestParam Long userId) {
+    public ResponseEntity<ApiResponse<List<CartItemResponse>>> getCart(@AuthenticationPrincipal CustomUserDetails currentUser) {
         return ResponseEntity.ok(
-                ApiResponse.success("Cart items successfully retrieved", cartService.getUserCart(userId))
+                ApiResponse.success("Cart items successfully retrieved", cartService.getUserCart(currentUser.getId()))
         );
     }
 
     @PostMapping("/add")
     public ResponseEntity<ApiResponse<CartItemResponse>> addToCart(
-            @RequestParam Long userId,
+            @AuthenticationPrincipal CustomUserDetails currentUser,
             @RequestBody AddToCartRequest request
     ) {
         return ResponseEntity.ok(
-                ApiResponse.success("Item successfully added to cart", cartService.addToCart(userId, request))
+                ApiResponse.success("Item successfully added to cart", cartService.addToCart(currentUser.getId(), request))
         );
     }
 

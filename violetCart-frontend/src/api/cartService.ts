@@ -3,13 +3,13 @@ import type { ApiResponse } from "@/types/common.ts";
 import type { AddToCartRequest, CartItemResponse } from "@/components/storefront/types.ts";
 
 export const cartService = {
-    getCart: async (userId: number): Promise<ApiResponse<CartItemResponse[]>> => {
-        const response = await api.get<ApiResponse<CartItemResponse[]>>('/cart', { params: { userId } });
+    getCart: async (): Promise<ApiResponse<CartItemResponse[]>> => {
+        const response = await api.get<ApiResponse<CartItemResponse[]>>('/cart');
         return response.data;
     },
 
-    addToCart: async (userId: number, request: AddToCartRequest): Promise<ApiResponse<CartItemResponse>> => {
-        const response = await api.post<ApiResponse<CartItemResponse>>('/cart/add', request, { params: { userId } });
+    addToCart: async (request: AddToCartRequest): Promise<ApiResponse<CartItemResponse>> => {
+        const response = await api.post<ApiResponse<CartItemResponse>>('/cart/add', request);
         return response.data;
     },
 

@@ -1,16 +1,16 @@
 import React from 'react';
 
 interface StoreHeaderProps {
-    searchQuery: string;
+    searchQuery?: string;
     totalCartItems: number;
     customerName: string;
     onOpenCart: () => void;
     onLogout?: () => void;
-    onSearchChange: (query: string) => void;
+    onSearchChange?: (query: string) => void;
 }
 
 export const StoreHeader: React.FC<StoreHeaderProps> = ({
-                                                            searchQuery,
+                                                            searchQuery = '',
                                                             onSearchChange,
                                                             totalCartItems,
                                                             customerName,
@@ -34,21 +34,24 @@ export const StoreHeader: React.FC<StoreHeaderProps> = ({
                 </span>
             </div>
 
-            <div className="w-64 md:w-80">
-                <input
-                    type="text"
-                    placeholder="Search products or sellers…"
-                    value={searchQuery}
-                    onChange={(e) => onSearchChange(e.target.value)}
-                    className="w-full text-xs px-4 py-2 rounded-xl outline-none"
-                    style={{
-                        background: 'var(--color-surface-2)',
-                        color: 'var(--color-text)',
-                        border: '1px solid var(--color-border)',
-                        fontFamily: 'var(--font-body)',
-                    }}
-                />
-            </div>
+            {/* Conditionally render Search Bar only if onSearchChange is provided */}
+            {onSearchChange && (
+                <div className="w-64 md:w-80">
+                    <input
+                        type="text"
+                        placeholder="Search products or sellers…"
+                        value={searchQuery}
+                        onChange={(e) => onSearchChange(e.target.value)}
+                        className="w-full text-xs px-4 py-2 rounded-xl outline-none"
+                        style={{
+                            background: 'var(--color-surface-2)',
+                            color: 'var(--color-text)',
+                            border: '1px solid var(--color-border)',
+                            fontFamily: 'var(--font-body)',
+                        }}
+                    />
+                </div>
+            )}
 
             <div className="flex items-center gap-3">
                 <button

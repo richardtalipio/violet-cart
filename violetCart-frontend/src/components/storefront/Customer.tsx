@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useProductManagement } from '@/hooks/useProductManagement';
+import { useCartManagement } from '@/hooks/useCartManagement';
 import { ProductGrid } from './ProductGrid';
 import { ProductDetailModal } from './ProductDetailModal';
 import { CartDrawer } from './CartDrawer';
@@ -7,7 +8,7 @@ import { CheckoutModal } from './CheckoutModal';
 import { StoreHeader } from './StoreHeader';
 import { useAuthStore } from "@/store/useAuthStore.ts";
 import { useNavigate } from "react-router-dom";
-import type { CartItem, Order, Product } from "@/components/common/types.ts";
+import type { Order, Product } from "@/components/common/types.ts";
 import { MOCK_ORDERS } from "@/components/storefront/mockData.ts";
 
 const PAGE_SIZE = 8;
@@ -21,16 +22,25 @@ export const Customer: React.FC = () => {
         products,
         categories,
         totalPages,
-        loading,
+        loading: productsLoading,
         searchForm,
         handleSearchSubmit,
     } = useProductManagement();
+
+    // Integrated Cart Management Hook
+    const {
+        cartItems,
+        isLoading: cartLoading,
+        fetchCart,
+        addItemToCart,
+        updateItemQuantity,
+        removeItem,
+    } = useCartManagement();
 
     // Active View Tab State
     const [activeTab, setActiveTab] = useState<'products' | 'orders'>('products');
 
     // Shopping & Modal State
-    const [cart, setCart] = useState<CartItem[]>([]);
     const [isCartOpen, setIsCartOpen] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
     const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
@@ -48,7 +58,8 @@ export const Customer: React.FC = () => {
 
     useEffect(() => {
         handleSearchSubmit();
-    }, [handleSearchSubmit]);
+        fetchCart();
+    }, [handleSearchSubmit, fetchCart]);
 
     const onLogout = () => {
         logout();
@@ -70,16 +81,36 @@ export const Customer: React.FC = () => {
         handleSearchSubmit();
     };
 
-    // Cart Actions
-    const addToCart = (product: Product) => {
-        setCart((prev) => {
-            const existing = prev.find((item) => item.product.id === product.id);
-            if (existing) {
-                return prev.map((item) =>
-                    item.product.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
-                );
-            }
-            return [...prev, { product, quantity: 1 }];
+    // Reset search query when switching tabs (Optional/Recommended)
+    const handleTabChange = (tab: 'products' | 'orders') => {
+        setActiveTab(tab);
+        if (tab === 'orders') {
+            // Optional: Clear search term when moving away from catalog
+            searchForm.setValue('productName', '');
+            handleSearchSubmit();
+        }
+    };
+
+    // Cart Actions with Stock Validation
+    const handleAddToCart = async (product: Product) => {
+        const existingCartItem = cartItems.find(
+            (item) => Number(item.productId) === Number(product.id)
+        );
+        const currentQuantityInCart = existingCartItem ? existingCartItem.quantity : 0;
+
+        // Check if adding 1 more exceeds available stock
+        if (currentQuantityInCart + 1 > product.stockQuantity) {
+            setAddedToast({
+                show: true,
+                message: `Cannot add more. Only ${product.stockQuantity} item(s) left in stock!`,
+            });
+            setTimeout(() => setAddedToast({ show: false, message: '' }), 4000);
+            return;
+        }
+
+        await addItemToCart({
+            productId: Number(product.id),
+            quantity: 1,
         });
 
         const name = product?.productName || 'Item';
@@ -90,22 +121,12 @@ export const Customer: React.FC = () => {
         }, 4000);
     };
 
-    const updateQuantity = (productId: string, delta: number) => {
-        setCart((prev) =>
-            prev
-                .map((item) => {
-                    if (item.product.id === productId) {
-                        const newQty = item.quantity + delta;
-                        return newQty > 0 ? { ...item, quantity: newQty } : null;
-                    }
-                    return item;
-                })
-                .filter(Boolean) as CartItem[]
-        );
-    };
-
-    const totalCartItems = cart.reduce((acc, item) => acc + item.quantity, 0);
-    const subtotal = cart.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
+    const totalCartItems = cartItems.reduce((acc, item) => acc + item.quantity, 0);
+    const subtotal = cartItems.reduce((acc, item) => acc + (item.subtotal ?? item.price * item.quantity), 0);
+    const cartQuantities = cartItems.reduce((acc, item) => {
+        acc[item.productId] = item.quantity;
+        return acc;
+    }, {} as Record<string | number, number>);
 
     const handlePlaceOrder = () => {
         setIsCheckoutOpen(false);
@@ -119,12 +140,12 @@ export const Customer: React.FC = () => {
             customerName: customerName,
             orderDate: new Date().toISOString().split('T')[0],
             status: 'Paid',
-            items: cart.map((item, idx) => ({
+            items: cartItems.map((item, idx) => ({
                 id: `item-${Date.now()}-${idx}`,
-                productName: item.product.productName,
-                image: item.product.imageUrl || '',
-                price: item.product.price,
-                priceFormatted: `₱${item.product.price.toLocaleString()}`,
+                productName: item.productName,
+                image: item.imageUrl || '',
+                price: item.price,
+                priceFormatted: `₱${item.price.toLocaleString()}`,
                 quantity: item.quantity,
             })),
             shippingAddress: {
@@ -144,7 +165,10 @@ export const Customer: React.FC = () => {
         };
 
         setOrders((prev) => [newOrder, ...prev]);
-        setCart([]);
+
+        // Clear server cart items sequentially upon order completion
+        cartItems.forEach((item) => removeItem(item.id));
+
         setOrderSuccess(true);
         setTimeout(() => setOrderSuccess(false), 4000);
     };
@@ -169,12 +193,12 @@ export const Customer: React.FC = () => {
     return (
         <div className="h-screen flex flex-col overflow-hidden relative" style={{ background: 'var(--color-bg)', color: 'var(--color-text)' }}>
             {/* Loading Overlay */}
-            {loading && (
+            {(productsLoading || cartLoading) && (
                 <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/30 backdrop-blur-sm transition-opacity">
                     <div className="flex flex-col items-center gap-3 p-6 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)] shadow-2xl">
                         <div className="w-8 h-8 border-3 border-t-transparent rounded-full animate-spin" style={{ borderColor: 'var(--color-accent)', borderTopColor: 'transparent' }} />
                         <span className="text-xs font-semibold" style={{ color: 'var(--color-text)' }}>
-                            Loading products...
+                            {productsLoading ? 'Loading products...' : 'Updating cart...'}
                         </span>
                     </div>
                 </div>
@@ -207,8 +231,8 @@ export const Customer: React.FC = () => {
             {/* Frozen Fixed Header Section */}
             <div className="flex-none">
                 <StoreHeader
-                    searchQuery={searchForm.watch('productName') || ''}
-                    onSearchChange={handleSearchChange}
+                    searchQuery={activeTab === 'products' ? searchForm.watch('productName') || '' : ''}
+                    onSearchChange={activeTab === 'products' ? handleSearchChange : undefined}
                     totalCartItems={totalCartItems}
                     customerName={customerName}
                     onOpenCart={() => setIsCartOpen(true)}
@@ -220,7 +244,7 @@ export const Customer: React.FC = () => {
                     <div className="max-w-7xl mx-auto w-full flex items-center justify-between">
                         <div className="inline-flex items-center p-1 rounded-xl bg-[var(--color-bg)]/60">
                             <button
-                                onClick={() => setActiveTab('products')}
+                                onClick={() => handleTabChange('products')}
                                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium transition-all duration-200 ${
                                     activeTab === 'products'
                                         ? 'bg-[var(--color-surface)] shadow-sm font-bold'
@@ -237,7 +261,7 @@ export const Customer: React.FC = () => {
                             </button>
 
                             <button
-                                onClick={() => setActiveTab('orders')}
+                                onClick={() => handleTabChange('orders')}
                                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium transition-all duration-200 ${
                                     activeTab === 'orders'
                                         ? 'bg-[var(--color-surface)] shadow-sm font-bold'
@@ -272,12 +296,13 @@ export const Customer: React.FC = () => {
                 )}
             </div>
 
-            {/* Independently Scrollable Content Container */}
+            {/* Content Container */}
             <main className="flex-1 overflow-y-auto px-6 py-8 max-w-7xl mx-auto w-full">
                 {activeTab === 'products' ? (
                     <ProductGrid
                         products={products}
                         categories={categories}
+                        cartQuantities={cartQuantities}
                         selectedCategory={searchForm.watch('category') || 'All'}
                         currentPage={currentPage}
                         pageSize={PAGE_SIZE}
@@ -289,7 +314,7 @@ export const Customer: React.FC = () => {
                             handleSearchSubmit();
                         }}
                         onSelectProduct={setSelectedProduct}
-                        onAddToCart={addToCart}
+                        onAddToCart={handleAddToCart}
                     />
                 ) : (
                     <div className="flex flex-col gap-6">
@@ -309,7 +334,7 @@ export const Customer: React.FC = () => {
                                     You haven't placed any orders yet.
                                 </p>
                                 <button
-                                    onClick={() => setActiveTab('products')}
+                                    onClick={() => handleTabChange('products')}
                                     className="mt-2 px-4 py-2 rounded-xl text-xs font-semibold text-white transition-opacity hover:opacity-90 shadow-md"
                                     style={{ background: 'var(--color-accent)' }}
                                 >
@@ -382,17 +407,20 @@ export const Customer: React.FC = () => {
 
             <ProductDetailModal
                 product={selectedProduct}
+                cartQuantity={selectedProduct ? (cartQuantities[selectedProduct.id] ?? 0) : 0}
                 onClose={() => setSelectedProduct(null)}
-                onAddToCart={addToCart}
+                onAddToCart={handleAddToCart}
             />
 
             <CartDrawer
                 isOpen={isCartOpen}
-                cart={cart}
+                cart={cartItems}
+                products={products}
                 totalCartItems={totalCartItems}
                 subtotal={subtotal}
                 onClose={() => setIsCartOpen(false)}
-                onUpdateQuantity={updateQuantity}
+                onUpdateQuantity={(cartItemId, newQty) => updateItemQuantity(cartItemId, newQty)}
+                onRemoveItem={(cartItemId) => removeItem(cartItemId)}
                 onProceedToCheckout={() => {
                     setIsCartOpen(false);
                     setIsCheckoutOpen(true);
