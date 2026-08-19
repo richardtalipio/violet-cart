@@ -1,9 +1,9 @@
-package com.violetCart.backend.domain.order.service;
+package com.violetCart.backend.domain.cart.service;
 
-import com.violetCart.backend.domain.order.dto.AddToCartRequest;
-import com.violetCart.backend.domain.order.dto.CartItemResponse;
-import com.violetCart.backend.domain.order.entity.CartItem;
-import com.violetCart.backend.domain.order.repository.CartItemRepository;
+import com.violetCart.backend.domain.cart.dto.AddToCartRequest;
+import com.violetCart.backend.domain.cart.dto.CartItemResponse;
+import com.violetCart.backend.domain.cart.entity.CartItem;
+import com.violetCart.backend.domain.cart.repository.CartItemRepository;
 import com.violetCart.backend.domain.product.entity.Product;
 import com.violetCart.backend.domain.product.repository.ProductRepository;
 import com.violetCart.backend.domain.user.entity.UserAccount;

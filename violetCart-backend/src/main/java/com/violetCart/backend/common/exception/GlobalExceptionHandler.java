@@ -75,4 +75,29 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.error("An unexpected error occurred: " + ex.getMessage()));
     }
+
+    // 7. Resource Not Found (e.g., Product ID or Order ID does not exist)
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleResourceNotFoundException(ResourceNotFoundException ex) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.error(ex.getMessage()));
+    }
+
+    // 8. Out of Stock / Inventory Operations Failures
+    @ExceptionHandler(OutOfStockException.class)
+    public ResponseEntity<ApiResponse<Void>> handleOutOfStockException(OutOfStockException ex) {
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(ApiResponse.error(ex.getMessage()));
+    }
+
+    // 9. Database Optimistic Locking Failures (@Version race conditions)
+    @ExceptionHandler(org.springframework.dao.OptimisticLockingFailureException.class)
+    public ResponseEntity<ApiResponse<Void>> handleOptimisticLockingFailureException(
+            org.springframework.dao.OptimisticLockingFailureException ex) {
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(ApiResponse.error("Item was modified concurrently by another user. Please try again."));
+    }
 }

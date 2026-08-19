@@ -1,4 +1,4 @@
-package com.violetCart.backend.domain.order.entity;
+package com.violetCart.backend.domain.cart.entity;
 
 import com.violetCart.backend.domain.product.entity.Product;
 import com.violetCart.backend.domain.user.entity.UserAccount;

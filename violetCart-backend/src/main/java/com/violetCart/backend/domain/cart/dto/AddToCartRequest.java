@@ -1,8 +1,6 @@
-package com.violetCart.backend.domain.order.dto;
+package com.violetCart.backend.domain.cart.dto;
 import lombok.Getter;
 import lombok.Setter;
-
-import java.math.BigDecimal;
 
 @Getter
 @Setter

@@ -1,6 +1,6 @@
-package com.violetCart.backend.domain.order.repository;
+package com.violetCart.backend.domain.cart.repository;
 
-import com.violetCart.backend.domain.order.entity.CartItem;
+import com.violetCart.backend.domain.cart.entity.CartItem;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

@@ -1,20 +1,23 @@
 package com.violetCart.backend.domain.order.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 
 @Entity
 @Table(name = "order_items")
-@Getter
-@Setter
+@Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class OrderItem {
 
     @Id
+    @Column(name = "id", nullable = false)
     private String id;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -22,16 +25,17 @@ public class OrderItem {
     private Order order;
 
     @Column(name = "product_id", nullable = false)
-    private Long productId; // Updated to Long
+    private Long productId;
 
     @Column(name = "product_name", nullable = false)
     private String productName;
 
-    private String image;
+    @Column(name = "image_url", length = 500)
+    private String imageUrl;
 
-    @Column(nullable = false)
+    @Column(name = "price", nullable = false, precision = 10, scale = 2)
     private BigDecimal price;
 
-    @Column(nullable = false)
+    @Column(name = "quantity", nullable = false)
     private Integer quantity;
 }

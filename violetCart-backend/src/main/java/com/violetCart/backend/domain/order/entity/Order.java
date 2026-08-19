@@ -1,75 +1,75 @@
 package com.violetCart.backend.domain.order.entity;
 
-import com.violetCart.backend.domain.user.entity.UserAccount;
+import com.violetCart.backend.domain.order.dto.OrderStatus;
+import com.violetCart.backend.domain.order.dto.PaymentMethod;
 import jakarta.persistence.*;
-import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-// ==========================================
-// 1. Orders Entity
-// ==========================================
 @Entity
 @Table(name = "orders")
-@Getter
-@Setter
+@Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class Order {
 
     @Id
-    @Column(name = "id", length = 50, nullable = false)
+    @Column(name = "id", nullable = false)
     private String id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_account_id", nullable = false)
-    private UserAccount userAccount;
+    @Column(name = "user_account_id", nullable = false)
+    private Long userAccountId;
 
-    @CreationTimestamp
+    @Column(name = "customer_name", nullable = false)
+    private String customerName;
+
     @Column(name = "order_date", nullable = false, updatable = false)
     private LocalDateTime orderDate;
 
-    @Column(name = "status", length = 30, nullable = false)
-    private String status;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "order_status", nullable = false, length = 50)
+    private OrderStatus orderStatus;
 
-    // Address Details
-    @Column(name = "recipient_name", length = 100, nullable = false)
-    private String recipientName;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_method", nullable = false, length = 50)
+    private PaymentMethod paymentMethod;
 
-    @Column(name = "phone_number", length = 20, nullable = false)
-    private String phoneNumber;
+    @Column(name = "expires_at")
+    private LocalDateTime expiresAt;
 
-    @Column(name = "street_address", columnDefinition = "TEXT", nullable = false)
-    private String streetAddress;
+    @Embedded
+    private ShippingAddress shippingAddress;
 
-    @Column(name = "city", length = 50, nullable = false)
-    private String city;
-
-    @Column(name = "province", length = 50, nullable = false)
-    private String province;
-
-    @Column(name = "postal_code", length = 10, nullable = false)
-    private String postalCode;
-
-    // Financial Breakdown
-    @Column(name = "subtotal", precision = 10, scale = 2, nullable = false)
+    @Column(name = "subtotal", nullable = false, precision = 10, scale = 2)
     private BigDecimal subtotal;
 
-    @Column(name = "shipping_fee", precision = 10, scale = 2, nullable = false)
+    @Column(name = "shipping_fee", nullable = false, precision = 10, scale = 2)
     private BigDecimal shippingFee;
 
-    @Column(name = "discount", precision = 10, scale = 2, nullable = false)
-    private BigDecimal discount;
+    @Column(name = "total", nullable = false, precision = 10, scale = 2)
+    private BigDecimal total;
 
-    @Column(name = "total_amount", precision = 10, scale = 2, nullable = false)
-    private BigDecimal totalAmount;
-
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @Builder.Default
-    private List<OrderItem> items = new ArrayList<>();
+    private List<OrderItem> orderItems = new ArrayList<>();
+
+    @PrePersist
+    protected void onCreate() {
+        if (this.orderDate == null) {
+            this.orderDate = LocalDateTime.now();
+        }
+    }
+
+    public void addOrderItem(OrderItem item) {
+        orderItems.add(item);
+        item.setOrder(this);
+    }
 }

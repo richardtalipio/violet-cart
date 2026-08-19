@@ -1,9 +1,9 @@
-package com.violetCart.backend.domain.order.controller;
+package com.violetCart.backend.domain.cart.controller;
 
 import com.violetCart.backend.common.response.ApiResponse;
-import com.violetCart.backend.domain.order.dto.AddToCartRequest;
-import com.violetCart.backend.domain.order.dto.CartItemResponse;
-import com.violetCart.backend.domain.order.service.CartService;
+import com.violetCart.backend.domain.cart.dto.AddToCartRequest;
+import com.violetCart.backend.domain.cart.dto.CartItemResponse;
+import com.violetCart.backend.domain.cart.service.CartService;
 import com.violetCart.backend.domain.user.entity.CustomUserDetails;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
