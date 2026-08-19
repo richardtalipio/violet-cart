@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useProductManagement } from '@/hooks/useProductManagement';
 import { useCartManagement } from '@/hooks/useCartManagement';
+import { useOrderManagement } from '@/hooks/useOrderManagement';
 import { ProductGrid } from './ProductGrid';
 import { ProductDetailModal } from './ProductDetailModal';
 import { CartDrawer } from './CartDrawer';
@@ -15,7 +16,7 @@ const PAGE_SIZE = 8;
 
 export const Customer: React.FC = () => {
     const customerName = 'Maria Santos';
-    const logout = useAuthStore((state) => state.logout);
+    const { logout, user } = useAuthStore((state) => ({ logout: state.logout, user: state.user }));
     const navigate = useNavigate();
 
     const {
@@ -36,6 +37,8 @@ export const Customer: React.FC = () => {
         updateItemQuantity,
         removeItem,
     } = useCartManagement();
+
+    const { processCheckout, isLoading: isCheckoutLoading } = useOrderManagement();
 
     // Active View Tab State
     const [activeTab, setActiveTab] = useState<'products' | 'orders'>('products');
@@ -85,7 +88,6 @@ export const Customer: React.FC = () => {
     const handleTabChange = (tab: 'products' | 'orders') => {
         setActiveTab(tab);
         if (tab === 'orders') {
-            // Optional: Clear search term when moving away from catalog
             searchForm.setValue('productName', '');
             handleSearchSubmit();
         }
@@ -128,49 +130,80 @@ export const Customer: React.FC = () => {
         return acc;
     }, {} as Record<string | number, number>);
 
-    const handlePlaceOrder = () => {
+    const handlePlaceOrder = async (data: { shippingAddress: string; paymentMethod: 'ONLINE' | 'COD' }) => {
         setIsCheckoutOpen(false);
+
+        if (!user) {
+            console.error("User not found");
+            return;
+        }
 
         const shippingFee = 100;
         const discount = 0;
         const orderTotal = subtotal + shippingFee - discount;
 
-        const newOrder: Order = {
-            id: `ORD-2026-${Math.floor(1000 + Math.random() * 9000)}`,
-            customerName: customerName,
-            orderDate: new Date().toISOString().split('T')[0],
-            status: 'Paid',
-            items: cartItems.map((item, idx) => ({
-                id: `item-${Date.now()}-${idx}`,
-                productName: item.productName,
-                image: item.imageUrl || '',
-                price: item.price,
-                priceFormatted: `₱${item.price.toLocaleString()}`,
-                quantity: item.quantity,
-            })),
+        const checkoutData: any = {
+            userAccountId: user.id,
+            customerName: `${user.firstName || ''} ${user.lastName || ''}`.trim() || customerName,
+            paymentMethod: data.paymentMethod,
             shippingAddress: {
-                fullName: customerName,
+                fullName: `${user.firstName || ''} ${user.lastName || ''}`.trim() || customerName,
                 phone: '+63 918 987 6543',
-                street: '45 Katipunan Avenue, Brgy. Loyola Heights',
+                street: data.shippingAddress,
                 city: 'Quezon City',
                 province: 'Metro Manila',
                 postalCode: '1108',
             },
-            breakdown: {
-                subtotal: subtotal,
-                shippingFee: shippingFee,
-                discount: discount,
-                total: orderTotal,
-            },
+            shippingFee: shippingFee,
+            items: cartItems.map((item) => ({
+                productId: Number(item.productId),
+                productName: item.productName,
+                imageUrl: item.imageUrl || '',
+                price: item.price,
+                quantity: item.quantity,
+            })),
         };
 
-        setOrders((prev) => [newOrder, ...prev]);
+        const result = await processCheckout(checkoutData);
 
-        // Clear server cart items sequentially upon order completion
-        cartItems.forEach((item) => removeItem(item.id));
+        if (result) {
+            const newOrder: Order = {
+                id: result.orderId,
+                customerName: `${user.firstName || ''} ${user.lastName || ''}`.trim() || customerName,
+                orderDate: new Date().toISOString().split('T')[0],
+                status: 'Paid',
+                items: cartItems.map((item, idx) => ({
+                    id: `item-${Date.now()}-${idx}`,
+                    productName: item.productName,
+                    image: item.imageUrl || '',
+                    price: item.price,
+                    priceFormatted: `₱${item.price.toLocaleString()}`,
+                    quantity: item.quantity,
+                })),
+                shippingAddress: {
+                    fullName: `${user.firstName || ''} ${user.lastName || ''}`.trim() || customerName,
+                    phone: '+63 918 987 6543',
+                    street: data.shippingAddress,
+                    city: 'Quezon City',
+                    province: 'Metro Manila',
+                    postalCode: '1108',
+                },
+                breakdown: {
+                    subtotal: subtotal,
+                    shippingFee: shippingFee,
+                    discount: discount,
+                    total: orderTotal,
+                },
+            };
+            setOrders((prev) => [newOrder, ...prev]);
 
-        setOrderSuccess(true);
-        setTimeout(() => setOrderSuccess(false), 4000);
+            setOrderSuccess(true);
+            setTimeout(() => setOrderSuccess(false), 4000);
+
+            cartItems.forEach((item) => removeItem(item.id));
+        } else {
+            console.error("Checkout failed");
+        }
     };
 
     const getStatusBadgeStyle = (status: Order['status']) => {
@@ -190,15 +223,23 @@ export const Customer: React.FC = () => {
         }
     };
 
+    const isGlobalLoading = productsLoading || cartLoading || isCheckoutLoading;
+
+    const getLoadingMessage = () => {
+        if (isCheckoutLoading) return 'Processing order...';
+        if (cartLoading) return 'Updating cart...';
+        return 'Loading products...';
+    };
+
     return (
         <div className="h-screen flex flex-col overflow-hidden relative" style={{ background: 'var(--color-bg)', color: 'var(--color-text)' }}>
-            {/* Loading Overlay */}
-            {(productsLoading || cartLoading) && (
-                <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/30 backdrop-blur-sm transition-opacity">
+            {/* Unified Loading Overlay */}
+            {isGlobalLoading && (
+                <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/40 backdrop-blur-sm transition-opacity">
                     <div className="flex flex-col items-center gap-3 p-6 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)] shadow-2xl">
                         <div className="w-8 h-8 border-3 border-t-transparent rounded-full animate-spin" style={{ borderColor: 'var(--color-accent)', borderTopColor: 'transparent' }} />
                         <span className="text-xs font-semibold" style={{ color: 'var(--color-text)' }}>
-                            {productsLoading ? 'Loading products...' : 'Updating cart...'}
+                            {getLoadingMessage()}
                         </span>
                     </div>
                 </div>

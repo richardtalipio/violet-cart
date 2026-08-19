@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 interface CheckoutModalProps {
     isOpen: boolean;
     customerName: string;
     subtotal: number;
     onClose: () => void;
-    onConfirmOrder: () => void;
+    onConfirmOrder: (data: { shippingAddress: string; paymentMethod: 'ONLINE' | 'COD' }) => void;
 }
 
 export const CheckoutModal: React.FC<CheckoutModalProps> = ({
@@ -15,6 +15,9 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                                                                 onClose,
                                                                 onConfirmOrder,
                                                             }) => {
+    const [shippingAddress, setShippingAddress] = useState("123 Ayala Avenue, Makati City");
+    const [paymentMethod, setPaymentMethod] = useState<'ONLINE' | 'COD'>('ONLINE');
+
     if (!isOpen) return null;
 
     return (
@@ -43,15 +46,26 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
                     <div>
                         <label className="text-xs font-medium block mb-1" style={{ color: 'var(--color-muted)' }}>Shipping Address</label>
-                        <input type="text" defaultValue="123 Ayala Avenue, Makati City" className="w-full text-xs p-3 rounded-xl border outline-none" style={{ background: 'var(--color-surface-2)', borderColor: 'var(--color-border)' }} />
+                        <input
+                            type="text"
+                            value={shippingAddress}
+                            onChange={(e) => setShippingAddress(e.target.value)}
+                            className="w-full text-xs p-3 rounded-xl border outline-none"
+                            style={{ background: 'var(--color-surface-2)', borderColor: 'var(--color-border)' }}
+                        />
                     </div>
 
                     <div>
                         <label className="text-xs font-medium block mb-1" style={{ color: 'var(--color-muted)' }}>Payment Method</label>
-                        <select className="w-full text-xs p-3 rounded-xl border outline-none" style={{ background: 'var(--color-surface-2)', borderColor: 'var(--color-border)' }}>
-                            <option>GCash</option>
-                            <option>Maya</option>
-                            <option>Cash on Delivery (COD)</option>
+                        <select
+                            value={paymentMethod}
+                            onChange={(e) => setPaymentMethod(e.target.value as 'ONLINE' | 'COD')}
+                            className="w-full text-xs p-3 rounded-xl border outline-none"
+                            style={{ background: 'var(--color-surface-2)', borderColor: 'var(--color-border)' }}
+                        >
+                            <option value="ONLINE">GCash</option>
+                            <option value="ONLINE">Maya</option>
+                            <option value="COD">Cash on Delivery (COD)</option>
                         </select>
                     </div>
 
@@ -66,7 +80,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
                 <div className="p-6 border-t" style={{ borderColor: 'var(--color-border)' }}>
                     <button
-                        onClick={onConfirmOrder}
+                        onClick={() => onConfirmOrder({ shippingAddress, paymentMethod })}
                         className="w-full py-3 rounded-xl text-sm font-medium text-white"
                         style={{ background: 'var(--color-accent)', fontFamily: 'var(--font-display)' }}
                     >
