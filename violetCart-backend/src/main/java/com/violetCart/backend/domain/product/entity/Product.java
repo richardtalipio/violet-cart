@@ -65,16 +65,15 @@ public class Product {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    public RetrieveProductResponse toRetrieveProductResponse() {
+    public RetrieveProductResponse toRetrieveProductResponse(int availableStock) {
         return RetrieveProductResponse.builder()
                 .id(this.id)
-                .imageUrl(this.imageUrl)
                 .productName(this.productName)
-                .price(this.price)
-                .stockQuantity(this.stockQuantity)
-                .rating(this.rating)
-                .category(this.category)
                 .description(this.description)
+                .price(this.price)
+                .category(this.category)
+                .imageUrl(this.imageUrl)
+                .stockQuantity(availableStock)
                 .storeName(this.storeProfile.getStoreName())
                 .build();
     }

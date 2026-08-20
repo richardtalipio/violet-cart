@@ -5,7 +5,7 @@ export const MOCK_ORDERS: Order[] = [
         id: 'ORD-2026-8801',
         customerName: 'Juan Dela Cruz',
         orderDate: '2026-08-16',
-        status: 'Paid',
+        status: 'Delivered',
         items: [
             {
                 id: 'item-101',
@@ -51,7 +51,7 @@ export const MOCK_ORDERS: Order[] = [
         id: 'ORD-2026-8802',
         customerName: 'Maria Santos',
         orderDate: '2026-08-17',
-        status: 'Paid',
+        status: 'Preparing',
         items: [
             {
                 id: 'item-201',
@@ -97,7 +97,7 @@ export const MOCK_ORDERS: Order[] = [
         id: 'ORD-2026-8803',
         customerName: 'Mark Reyes',
         orderDate: '2026-08-17',
-        status: 'To Receive',
+        status: 'In Transit',
         items: [
             {
                 id: 'item-301',

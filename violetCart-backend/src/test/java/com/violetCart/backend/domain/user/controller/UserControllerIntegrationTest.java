@@ -1,17 +1,16 @@
 package com.violetCart.backend.domain.user.controller;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.violetCart.backend.domain.user.dto.request.RegisterRequest;
 import com.violetCart.backend.domain.user.entity.Role;
-import com.violetCart.backend.domain.user.repository.UserAccountRepository;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,46 +33,47 @@ class UserControllerIntegrationTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @Autowired
-    private UserAccountRepository userAccountRepository;
-
-    @BeforeEach
-    void setUp() {
-        userAccountRepository.deleteAll();
-    }
-
     @Test
-    @DisplayName("GET /api/v1/users/me - 401 Unauthorized without Token")
-    void getCurrentUser_NoToken_Returns401() throws Exception {
-        mockMvc.perform(get("/api/v1/users/me"))
-                .andExpect(status().isForbidden()); // or isUnauthorized depending on SecurityConfig entrypoint
-    }
-
-    @Test
-    @DisplayName("GET /api/v1/users/me - 200 OK with Valid Token")
+    @DisplayName("GET /api/v1/users/me - Success 200 OK")
     void getCurrentUser_WithToken_Success() throws Exception {
-        String uniqueEmail = "jane." + UUID.randomUUID() + "@example.com";
-        RegisterRequest request = new RegisterRequest();
-        request.setFirstName("Jane");
-        request.setLastName("Doe");
-        request.setEmail(uniqueEmail);
-        request.setContactNumber("09175960831");
-        request.setPassword("Password123!");
-        request.setRole(Role.ROLE_CUSTOMER);
+        String uniqueEmail = "john." + UUID.randomUUID() + "@example.com";
+
+        // 1. Register a user to generate a valid JWT token
+        RegisterRequest registerRequest = new RegisterRequest();
+        registerRequest.setFirstName("John");
+        registerRequest.setLastName("Doe");
+        registerRequest.setEmail(uniqueEmail);
+        registerRequest.setContactNumber("09171234567");
+        registerRequest.setPassword("Password123!");
+        registerRequest.setRole(Role.ROLE_CUSTOMER);
 
         MvcResult registerResult = mockMvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                        .content(objectMapper.writeValueAsString(registerRequest)))
+                .andExpect(status().isCreated())
                 .andReturn();
 
-        String responseJson = registerResult.getResponse().getContentAsString();
-        String token = objectMapper.readTree(responseJson).path("data").path("token").asText();
+        // 2. Extract JWT token from response payload
+        String responseString = registerResult.getResponse().getContentAsString();
+        JsonNode jsonNode = objectMapper.readTree(responseString);
+        String token = jsonNode.get("data").get("token").asText();
 
+        // 3. Request current user profile using Authorization header
         mockMvc.perform(get("/api/v1/users/me")
-                        .header("Authorization", "Bearer " + token))
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success", is(true)))
                 .andExpect(jsonPath("$.data.email", is(uniqueEmail)))
-                .andExpect(jsonPath("$.data.firstName", is("Jane")));
+                .andExpect(jsonPath("$.data.firstName", is("John")))
+                .andExpect(jsonPath("$.data.lastName", is("Doe")));
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/users/me - Unauthorized 403 Without Token")
+    void getCurrentUser_WithoutToken_Returns403() throws Exception {
+        mockMvc.perform(get("/api/v1/users/me")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isForbidden());
     }
 }

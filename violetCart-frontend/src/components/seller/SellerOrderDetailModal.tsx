@@ -1,14 +1,13 @@
 import React from 'react';
-import { type Order, type OrderStatus } from '../common/types';
+import { type Order, type OrderStatus as UIOrderStatus } from '../common/types';
+import { OrderStatus as BackendOrderStatus } from '../../types/orderTypes';
 import { getStatusStyle } from './SellerOrdersTable';
 
 interface SellerOrderDetailModalProps {
     order: Order | null;
     onClose: () => void;
-    onRequestStatusChange: (order: Order, newStatus: OrderStatus) => void;
+    onRequestStatusChange: (order: Order, newStatus: UIOrderStatus) => void;
 }
-
-const STATUS_OPTIONS: OrderStatus[] = ['Paid', 'To Ship', 'To Receive', 'Completed', 'Cancelled'];
 
 export const SellerOrderDetailModal: React.FC<SellerOrderDetailModalProps> = ({
                                                                                   order,
@@ -18,6 +17,20 @@ export const SellerOrderDetailModal: React.FC<SellerOrderDetailModalProps> = ({
     if (!order) return null;
 
     const badgeStyle = getStatusStyle(order.status);
+
+    const mapBackendToUiStatus = (status: string): UIOrderStatus => {
+        switch (status) {
+            case 'PENDING_PAYMENT': return 'Pending Payment';
+            case 'PREPARING': return 'Preparing';
+            case 'READY_FOR_SHIPMENT': return 'Ready for Shipment';
+            case 'IN_TRANSIT': return 'In Transit';
+            case 'OUT_FOR_DELIVERY': return 'Out for Delivery';
+            case 'DELIVERED': return 'Delivered';
+            case 'CANCELLED': return 'Cancelled';
+            case 'EXPIRED': return 'Expired';
+            default: return 'Pending Payment';
+        }
+    };
 
     return (
         <div
@@ -133,13 +146,14 @@ export const SellerOrderDetailModal: React.FC<SellerOrderDetailModalProps> = ({
                             Update Order Status
                         </span>
                         <div className="grid grid-cols-3 gap-2">
-                            {STATUS_OPTIONS.map((status) => {
-                                const style = getStatusStyle(status);
-                                const isCurrent = order.status === status;
+                            {Object.values(BackendOrderStatus).map((status) => {
+                                const uiStatus = mapBackendToUiStatus(status);
+                                const style = getStatusStyle(uiStatus);
+                                const isCurrent = order.status === uiStatus;
                                 return (
                                     <button
                                         key={status}
-                                        onClick={() => onRequestStatusChange(order, status)}
+                                        onClick={() => onRequestStatusChange(order, uiStatus)}
                                         className="py-2 px-3 rounded-xl text-xs font-medium border transition-all flex items-center justify-center gap-1"
                                         style={{
                                             background: isCurrent ? style.background : 'var(--color-surface-2)',
@@ -147,7 +161,7 @@ export const SellerOrderDetailModal: React.FC<SellerOrderDetailModalProps> = ({
                                             borderColor: isCurrent ? style.borderColor : 'var(--color-border)',
                                         }}
                                     >
-                                        <span>{status}</span>
+                                        <span>{uiStatus}</span>
                                         {isCurrent && <span>✓</span>}
                                     </button>
                                 );

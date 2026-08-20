@@ -1,15 +1,29 @@
 import { api } from './axios';
 import type { ApiResponse } from '@/types/common';
-import type {CheckoutFormData} from "@/schemas/orderSchema.ts";
-import type {CheckoutResponse} from "@/types/orderTypes.ts";
+import type { CheckoutFormData } from '@/schemas/orderSchema';
+import type { CheckoutResponse, OrderResponse } from '@/types/orderTypes';
 
 export const orderService = {
     checkout: async (
         checkoutData: CheckoutFormData
     ): Promise<ApiResponse<CheckoutResponse>> => {
         const response = await api.post<ApiResponse<CheckoutResponse>>(
-            '/v1/orders/checkout',
+            '/orders/checkout',
             checkoutData
+        );
+        return response.data;
+    },
+
+    getUserOrders: async (): Promise<ApiResponse<OrderResponse[]>> => {
+        const response = await api.get<ApiResponse<OrderResponse[]>>('/orders');
+        return response.data;
+    },
+
+    getOrderById: async (
+        orderId: string
+    ): Promise<ApiResponse<OrderResponse>> => {
+        const response = await api.get<ApiResponse<OrderResponse>>(
+            `/orders/${orderId}`
         );
         return response.data;
     },

@@ -8,12 +8,15 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface OrderRepository extends JpaRepository<Order, String> {
 
 
     List<Order> findByUserAccountIdOrderByOrderDateDesc(Long userAccountId);
+
+    Optional<Order> findByIdAndUserAccountId(String id, Long userAccountId);
 
     List<Order> findByOrderStatus(OrderStatus orderStatus);
 

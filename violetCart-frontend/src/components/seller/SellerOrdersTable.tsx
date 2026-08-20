@@ -9,16 +9,22 @@ interface SellerOrdersTableProps {
 
 export const getStatusStyle = (status: OrderStatus) => {
     switch (status) {
-        case 'Paid':
+        case 'Pending Payment':
+            return { background: 'rgba(245, 158, 11, 0.12)', color: '#f59e0b', borderColor: 'rgba(245, 158, 11, 0.25)' };
+        case 'Preparing':
             return { background: 'rgba(59, 130, 246, 0.12)', color: '#60a5fa', borderColor: 'rgba(59, 130, 246, 0.25)' };
-        case 'To Ship':
-            return { background: 'rgba(245, 158, 11, 0.12)', color: '#fbbf24', borderColor: 'rgba(245, 158, 11, 0.25)' };
-        case 'To Receive':
+        case 'Ready for Shipment':
+            return { background: 'rgba(59, 130, 246, 0.12)', color: '#60a5fa', borderColor: 'rgba(59, 130, 246, 0.25)' };
+        case 'In Transit':
             return { background: 'rgba(168, 85, 247, 0.12)', color: '#c084fc', borderColor: 'rgba(168, 85, 247, 0.25)' };
-        case 'Completed':
+        case 'Out for Delivery':
+            return { background: 'rgba(168, 85, 247, 0.12)', color: '#c084fc', borderColor: 'rgba(168, 85, 247, 0.25)' };
+        case 'Delivered':
             return { background: 'rgba(34, 197, 94, 0.12)', color: '#4ade80', borderColor: 'rgba(34, 197, 94, 0.25)' };
         case 'Cancelled':
             return { background: 'rgba(239, 68, 68, 0.12)', color: '#f87171', borderColor: 'rgba(239, 68, 68, 0.25)' };
+        case 'Expired':
+            return { background: 'rgba(156, 163, 175, 0.12)', color: '#6b7280', borderColor: 'rgba(156, 163, 175, 0.25)' };
         default:
             return { background: 'var(--color-surface-2)', color: 'var(--color-text)', borderColor: 'var(--color-border)' };
     }

@@ -1,12 +1,10 @@
-package com.violetCart.backend.domain.order.repository;
-import com.violetCart.backend.domain.order.entity.Inventory;
+package com.violetCart.backend.domain.inventory.repository;
+import com.violetCart.backend.domain.inventory.entity.Inventory;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-
-import java.util.Optional;
 
 @Repository
 public interface InventoryRepository extends JpaRepository<Inventory, Long> {
@@ -82,4 +80,11 @@ public interface InventoryRepository extends JpaRepository<Inventory, Long> {
         WHERE product_id = :productId
         """, nativeQuery = true)
     int restockItem(@Param("productId") Long productId, @Param("quantity") Integer quantity);
+
+    @Modifying
+    @Query(value = """
+        INSERT INTO inventory (product_id, available_stock, reserved_stock, version)
+        VALUES (:productId, :availableStock, 0, 0)
+        """, nativeQuery = true)
+    void insertInitialInventory(@Param("productId") Long productId, @Param("availableStock") Integer availableStock);
 }

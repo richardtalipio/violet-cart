@@ -1,4 +1,4 @@
-export type OrderStatus = 'Paid' | 'To Ship' | 'To Receive' | 'Completed' | 'Cancelled';
+export type OrderStatus = 'Pending Payment' | 'Preparing' | 'Ready for Shipment' | 'In Transit' | 'Out for Delivery' | 'Delivered' | 'Cancelled' | 'Expired';
 
 export interface Seller {
     fullName: string;

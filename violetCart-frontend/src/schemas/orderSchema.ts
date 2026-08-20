@@ -43,7 +43,6 @@ export const checkoutItemSchema = z.object({
 });
 
 export const checkoutSchema = z.object({
-    userAccountId: z.number().positive('Invalid user account ID'),
     customerName: z.string().min(1, 'Customer name is required'),
     paymentMethod: paymentMethodSchema,
     shippingAddress: shippingAddressSchema,

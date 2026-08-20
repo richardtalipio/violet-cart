@@ -10,13 +10,16 @@ import { StoreHeader } from './StoreHeader';
 import { useAuthStore } from "@/store/useAuthStore.ts";
 import { useNavigate } from "react-router-dom";
 import type { Order, Product } from "@/components/common/types.ts";
-import { MOCK_ORDERS } from "@/components/storefront/mockData.ts";
+import type {OrderResponse, OrderStatus as APIOrderStatus} from "@/types/orderTypes";
 
 const PAGE_SIZE = 8;
 
 export const Customer: React.FC = () => {
     const customerName = 'Maria Santos';
-    const { logout, user } = useAuthStore((state) => ({ logout: state.logout, user: state.user }));
+
+    // Extract Zustand store properties individually to maintain stable object references
+    const logout = useAuthStore((state) => state.logout);
+    const user = useAuthStore((state) => state.user);
     const navigate = useNavigate();
 
     const {
@@ -38,7 +41,7 @@ export const Customer: React.FC = () => {
         removeItem,
     } = useCartManagement();
 
-    const { processCheckout, isLoading: isCheckoutLoading } = useOrderManagement();
+    const { processCheckout, isLoading: isCheckoutLoading, getUserOrders, userOrders } = useOrderManagement();
 
     // Active View Tab State
     const [activeTab, setActiveTab] = useState<'products' | 'orders'>('products');
@@ -51,7 +54,49 @@ export const Customer: React.FC = () => {
     const [currentPage, setCurrentPage] = useState(1);
 
     // Mock Customer Orders State
-    const [orders, setOrders] = useState<Order[]>(MOCK_ORDERS);
+    const [localOrders, setLocalOrders] = useState<Order[]>([]);
+
+    const mapOrder = (o: OrderResponse): Order => ({
+        id: o.id,
+        customerName: o.customerName,
+        orderDate: o.orderDate.split('T')[0],
+        status: mapOrderStatus(o.orderStatus),
+        items: o.items.map(item => ({
+            id: item.id,
+            productName: item.productName,
+            image: item.imageUrl,
+            price: item.price,
+            priceFormatted: `₱${item.price.toLocaleString()}`,
+            quantity: item.quantity,
+        })),
+        shippingAddress: o.shippingAddress,
+        breakdown: {
+            subtotal: o.subtotal,
+            shippingFee: o.shippingFee,
+            discount: 0,
+            total: o.total,
+        },
+    });
+
+    const mapOrderStatus = (status: APIOrderStatus): Order['status'] => {
+        switch (status) {
+            case 'PENDING_PAYMENT': return 'Pending Payment';
+            case 'PREPARING': return 'Preparing';
+            case 'READY_FOR_SHIPMENT': return 'Ready for Shipment';
+            case 'IN_TRANSIT': return 'In Transit';
+            case 'OUT_FOR_DELIVERY': return 'Out for Delivery';
+            case 'DELIVERED': return 'Delivered';
+            case 'CANCELLED': return 'Cancelled';
+            case 'EXPIRED': return 'Expired';
+            default: return 'Pending Payment';
+        }
+    };
+
+    useEffect(() => {
+        if (userOrders) {
+            setLocalOrders(userOrders.map(mapOrder));
+        }
+    }, [userOrders]);
 
     // Toast Notification State
     const [addedToast, setAddedToast] = useState<{ show: boolean; message: string }>({
@@ -59,10 +104,13 @@ export const Customer: React.FC = () => {
         message: '',
     });
 
+    // Run initial data fetching once on component mount
     useEffect(() => {
         handleSearchSubmit();
         fetchCart();
-    }, [handleSearchSubmit, fetchCart]);
+        getUserOrders();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const onLogout = () => {
         logout();
@@ -143,7 +191,6 @@ export const Customer: React.FC = () => {
         const orderTotal = subtotal + shippingFee - discount;
 
         const checkoutData: any = {
-            userAccountId: user.id,
             customerName: `${user.firstName || ''} ${user.lastName || ''}`.trim() || customerName,
             paymentMethod: data.paymentMethod,
             shippingAddress: {
@@ -171,7 +218,7 @@ export const Customer: React.FC = () => {
                 id: result.orderId,
                 customerName: `${user.firstName || ''} ${user.lastName || ''}`.trim() || customerName,
                 orderDate: new Date().toISOString().split('T')[0],
-                status: 'Paid',
+                status: 'Pending Payment',
                 items: cartItems.map((item, idx) => ({
                     id: `item-${Date.now()}-${idx}`,
                     productName: item.productName,
@@ -195,7 +242,7 @@ export const Customer: React.FC = () => {
                     total: orderTotal,
                 },
             };
-            setOrders((prev) => [newOrder, ...prev]);
+            setLocalOrders((prev) => [newOrder, ...prev]);
 
             setOrderSuccess(true);
             setTimeout(() => setOrderSuccess(false), 4000);
@@ -208,16 +255,22 @@ export const Customer: React.FC = () => {
 
     const getStatusBadgeStyle = (status: Order['status']) => {
         switch (status) {
-            case 'Paid':
-                return { bg: 'rgba(52,211,153,0.12)', color: '#34d399', label: 'Paid' };
-            case 'To Receive':
-                return { bg: 'rgba(168,85,247,0.12)', color: '#c084fc', label: 'To Receive' };
-            case 'To Ship':
+            case 'Pending Payment':
+                return { bg: 'rgba(245,158,11,0.12)', color: '#f59e0b', label: 'Pending Payment' };
+            case 'Preparing':
                 return { bg: 'rgba(59,130,246,0.12)', color: '#60a5fa', label: 'Preparing' };
-            case 'Completed':
-                return { bg: 'rgba(16,185,129,0.12)', color: '#10b981', label: 'Completed' };
+            case 'Ready for Shipment':
+                return { bg: 'rgba(59,130,246,0.12)', color: '#60a5fa', label: 'Ready for Shipment' };
+            case 'In Transit':
+                return { bg: 'rgba(168,85,247,0.12)', color: '#c084fc', label: 'In Transit' };
+            case 'Out for Delivery':
+                return { bg: 'rgba(168,85,247,0.12)', color: '#c084fc', label: 'Out for Delivery' };
+            case 'Delivered':
+                return { bg: 'rgba(16,185,129,0.12)', color: '#10b981', label: 'Delivered' };
             case 'Cancelled':
                 return { bg: 'rgba(239,68,68,0.12)', color: '#ef4444', label: 'Cancelled' };
+            case 'Expired':
+                return { bg: 'rgba(156,163,175,0.12)', color: '#6b7280', label: 'Expired' };
             default:
                 return { bg: 'rgba(245,158,11,0.12)', color: '#f59e0b', label: status };
         }
@@ -323,7 +376,7 @@ export const Customer: React.FC = () => {
                                         color: activeTab === 'orders' ? '#ffffff' : 'var(--color-muted)',
                                     }}
                                 >
-                                    {orders.length}
+                                    {localOrders.length}
                                 </span>
                             </button>
                         </div>
@@ -365,7 +418,7 @@ export const Customer: React.FC = () => {
                             </h2>
                         </div>
 
-                        {orders.length === 0 ? (
+                        {localOrders.length === 0 ? (
                             <div
                                 className="p-12 text-center rounded-2xl border flex flex-col items-center gap-3"
                                 style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)' }}
@@ -384,7 +437,7 @@ export const Customer: React.FC = () => {
                             </div>
                         ) : (
                             <div className="flex flex-col gap-4">
-                                {orders.map((order) => {
+                                {localOrders.map((order) => {
                                     const badgeStyle = getStatusBadgeStyle(order.status);
                                     return (
                                         <div

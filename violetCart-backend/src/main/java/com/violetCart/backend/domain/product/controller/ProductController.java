@@ -68,7 +68,7 @@ public class ProductController {
         Product savedProduct = productService.addProduct(request, currentUser.getStoreProfileId(), currentUser.getId());
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(ApiResponse.success("Product added successfully", savedProduct.toRetrieveProductResponse()));
+                .body(ApiResponse.success("Product added successfully", savedProduct.toRetrieveProductResponse(stocksLeft)));
     }
 
     @GetMapping
