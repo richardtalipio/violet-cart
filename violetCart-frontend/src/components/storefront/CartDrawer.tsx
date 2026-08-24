@@ -1,6 +1,7 @@
 import React from 'react';
 import type { CartItemResponse } from '@/components/storefront/types';
 import type { Product } from '@/components/common/types';
+import {SecureImage} from "@/components/common/SecureImage.tsx";
 
 interface CartDrawerProps {
     isOpen: boolean;
@@ -71,7 +72,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                                     className="flex gap-4 p-3 rounded-xl border relative group"
                                     style={{ background: 'var(--color-surface-2)', borderColor: 'var(--color-border)' }}
                                 >
-                                    <img
+                                    <SecureImage
                                         src={item.imageUrl}
                                         alt={item.productName}
                                         className="w-14 h-14 rounded-lg object-cover"

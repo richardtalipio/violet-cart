@@ -37,7 +37,7 @@ public class OrderServiceImpl implements OrderService {
         BigDecimal total = subtotal.add(shippingFee);
 
         boolean isCod = request.getPaymentMethod() == PaymentMethod.COD;
-        OrderStatus initialStatus = isCod ? OrderStatus.READY_FOR_SHIPMENT : OrderStatus.PENDING_PAYMENT;
+        OrderStatus initialStatus = isCod ? OrderStatus.PREPARING : OrderStatus.PENDING_PAYMENT;
         LocalDateTime expiresAt = isCod ? null : LocalDateTime.now().plusMinutes(EXPIRATION_MINUTES);
 
         Order order = buildOrder(request, userAccountId, subtotal, shippingFee, total, initialStatus, expiresAt);

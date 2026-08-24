@@ -31,10 +31,10 @@ export const useLoginForm = () => {
             setServerError(null);
             const response = await authService.login(data);
 
-            const { token, email, role, status } = response.data;
+            const { token, email, role, status, firstName, lastName } = response.data;
 
             // Store auth session in Zustand
-            setAuth(token, { id: 0, email, firstName: '', lastName: '', role, status });
+            setAuth(token, { id: 0, email, firstName: firstName, lastName: lastName, role, status });
             console.log(role);
             if (role === 'ROLE_ADMIN') {
                 console.log("TESTING");

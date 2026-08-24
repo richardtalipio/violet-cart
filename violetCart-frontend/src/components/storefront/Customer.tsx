@@ -11,15 +11,17 @@ import { useAuthStore } from "@/store/useAuthStore.ts";
 import { useNavigate } from "react-router-dom";
 import type { Order, Product } from "@/components/common/types.ts";
 import type {OrderResponse, OrderStatus as APIOrderStatus} from "@/types/orderTypes";
+import {SecureImage} from "@/components/common/SecureImage.tsx";
 
 const PAGE_SIZE = 8;
 
 export const Customer: React.FC = () => {
-    const customerName = 'Maria Santos';
+
 
     // Extract Zustand store properties individually to maintain stable object references
     const logout = useAuthStore((state) => state.logout);
     const user = useAuthStore((state) => state.user);
+    const customerName = user?.firstName+ " " + user?.lastName;
     const navigate = useNavigate();
 
     const {
@@ -214,6 +216,12 @@ export const Customer: React.FC = () => {
         const result = await processCheckout(checkoutData);
 
         if (result) {
+            // If PayMongo redirect URL is returned, handle redirect
+            if (result.checkoutUrl) {
+                window.location.href = result.checkoutUrl;
+                return;
+            }
+
             const newOrder: Order = {
                 id: result.orderId,
                 customerName: `${user.firstName || ''} ${user.lastName || ''}`.trim() || customerName,
@@ -247,7 +255,11 @@ export const Customer: React.FC = () => {
             setOrderSuccess(true);
             setTimeout(() => setOrderSuccess(false), 4000);
 
-            cartItems.forEach((item) => removeItem(item.id));
+            // 1. Clear cart
+            await Promise.all(cartItems.map((item) => removeItem(item.id)));
+
+            // 2. Refresh product catalog to fetch updated stock count from backend
+            await handleSearchSubmit();
         } else {
             console.error("Checkout failed");
         }
@@ -467,7 +479,7 @@ export const Customer: React.FC = () => {
                                                     <div key={item.id} className="flex justify-between items-center text-xs">
                                                         <div className="flex items-center gap-3">
                                                             {item.image && (
-                                                                <img
+                                                                <SecureImage
                                                                     src={item.image}
                                                                     alt={item.productName}
                                                                     className="w-10 h-10 object-cover rounded-lg border border-[var(--color-border)]"

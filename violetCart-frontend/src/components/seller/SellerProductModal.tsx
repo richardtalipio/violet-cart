@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { type Product } from '../common/types';
 import { useProductManagement } from "@/hooks/useProductManagement";
+import { SecureImage } from "@/components/common/SecureImage.tsx";
 
 interface SellerProductModalProps {
     isOpen: boolean;
@@ -14,17 +15,30 @@ export const SellerProductModal: React.FC<SellerProductModalProps> = ({
                                                                           isOpen,
                                                                           product,
                                                                           onClose,
+                                                                          onSave,
                                                                           onDelete,
                                                                       }) => {
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const {
-        addForm: { register, setValue, watch, reset, formState: { errors, isSubmitting } },
+        addForm: { register, setValue, watch, reset, getValues, formState: { errors, isSubmitting } },
         handleAddSubmit,
         serverError,
     } = useProductManagement(() => {
+        // Emit updated product data to parent before closing
+        const currentValues = getValues();
+        onSave?.({
+            id: product?.id,
+            productName: currentValues.productName,
+            price: Number(currentValues.price),
+            stockQuantity: Number(currentValues.stocksLeft),
+            category: currentValues.category,
+            description: currentValues.description,
+        });
         onClose();
     });
+
+    const isEditing = product !== null;
 
     // Populate or reset form when modal opens or product changes
     useEffect(() => {
@@ -36,6 +50,10 @@ export const SellerProductModal: React.FC<SellerProductModalProps> = ({
                 category: product.category,
                 description: product.description,
             });
+
+            // Supply a dummy File object so strict Zod validation passes when editing without re-uploading an image
+            const dummyFile = new File([new Uint8Array(1)], "existing_image.jpg", { type: "image/jpeg" });
+            setValue('imageFile', dummyFile);
         } else {
             reset({
                 productName: '',
@@ -43,15 +61,21 @@ export const SellerProductModal: React.FC<SellerProductModalProps> = ({
                 stocksLeft: '',
                 category: '',
                 description: '',
+                imageFile: undefined,
             });
         }
-    }, [product, isOpen, reset]);
+    }, [product, isOpen, reset, setValue]);
 
     // Watch image file input in real time
     const imageFile = watch('imageFile');
 
-    // Derive object URL directly from watched file
-    const imagePreview = imageFile instanceof File ? URL.createObjectURL(imageFile) : '';
+    // Derive object URL directly from watched file if user uploaded a new one
+    const imagePreview = imageFile instanceof File && imageFile.name !== "existing_image.jpg"
+        ? URL.createObjectURL(imageFile)
+        : '';
+
+    // Show newly picked image preview first, fallback to existing product image URL
+    const displayImage = imagePreview || (isEditing ? product?.imageUrl : '');
 
     if (!isOpen) return null;
 
@@ -68,9 +92,6 @@ export const SellerProductModal: React.FC<SellerProductModalProps> = ({
             fileInputRef.current.value = '';
         }
     };
-
-    const isEditing = product !== null;
-    const displayImage = isEditing ? product?.imageUrl : imagePreview;
 
     return (
         <div
@@ -103,7 +124,7 @@ export const SellerProductModal: React.FC<SellerProductModalProps> = ({
 
                         {displayImage && (
                             <div className="mb-3 w-full h-40 rounded-xl overflow-hidden border relative" style={{ borderColor: 'var(--color-border)' }}>
-                                <img src={displayImage} alt="Preview" className="w-full h-full object-cover" />
+                                <SecureImage src={displayImage} alt="Preview" className="w-full h-full object-cover" />
                                 <button
                                     type="button"
                                     onClick={handleRemoveImage}
@@ -120,18 +141,17 @@ export const SellerProductModal: React.FC<SellerProductModalProps> = ({
                                 className="flex-1 text-center text-xs py-2.5 px-4 rounded-xl border cursor-pointer font-medium transition-colors hover:bg-surface-2"
                                 style={{ background: 'var(--color-surface-2)', borderColor: 'var(--color-border)' }}
                             >
-                                📁 Upload Image File
+                                📁 {isEditing ? 'Change Image File' : 'Upload Image File'}
                                 <input
                                     ref={fileInputRef}
                                     type="file"
                                     accept="image/*"
                                     onChange={handleImageUpload}
                                     className="hidden"
-                                    disabled={isEditing}
                                 />
                             </label>
                         </div>
-                        {errors.imageFile && (
+                        {errors.imageFile && imageFile?.name !== "existing_image.jpg" && (
                             <p className="text-[10px] text-red-500 mt-1">{errors.imageFile.message as string}</p>
                         )}
                     </div>

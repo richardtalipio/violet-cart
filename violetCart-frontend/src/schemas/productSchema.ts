@@ -3,12 +3,21 @@ import { z } from 'zod';
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/bmp'];
 
-export const addProductSchema = z.object({
+export const baseProductSchema = z.object({
     imageFile: z
-        .instanceof(File, { message: 'Image file is required' })
-        .refine((file) => file.size > 0, 'Image file cannot be empty')
-        .refine((file) => file.size <= MAX_FILE_SIZE, `Image file size must not exceed 5MB`)
-        .refine((file) => ACCEPTED_IMAGE_TYPES.includes(file.type), 'Only image files are allowed (JPEG, PNG, GIF, WebP, BMP)'),
+        .custom<File | undefined>()
+        .refine(
+            (file) => !file || (file instanceof File && file.size > 0),
+            'Image file cannot be empty'
+        )
+        .refine(
+            (file) => !file || (file instanceof File && file.size <= MAX_FILE_SIZE),
+            'Image file size must not exceed 5MB'
+        )
+        .refine(
+            (file) => !file || (file instanceof File && ACCEPTED_IMAGE_TYPES.includes(file.type)),
+            'Only image files are allowed (JPEG, PNG, GIF, WebP, BMP)'
+        ),
     productName: z
         .string()
         .min(1, 'Product name is required')
@@ -45,5 +54,15 @@ export const addProductSchema = z.object({
         .max(255, 'Description must not exceed 255 characters'),
 });
 
-export type AddProductFormData = z.infer<typeof addProductSchema>;
+export const addProductSchema = baseProductSchema.refine(
+    (data) => data.imageFile instanceof File,
+    {
+        message: 'Image file is required',
+        path: ['imageFile'],
+    }
+);
 
+export const editProductSchema = baseProductSchema;
+
+export type AddProductFormData = z.infer<typeof addProductSchema>;
+export type EditProductFormData = z.infer<typeof editProductSchema>;

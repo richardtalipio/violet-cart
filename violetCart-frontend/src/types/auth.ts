@@ -12,6 +12,8 @@ export interface AuthResponse {
     email: string;
     role: string;
     status: string;
+    firstName: string;
+    lastName: string;
 }
 
 export interface StoreProfile {

@@ -67,8 +67,19 @@ export const SellerDashboard: React.FC = () => {
 
     const handleSaveProduct = (pData: Partial<Product>) => {
         if (pData.id) {
+            // Optimistically update dashboard state
+            setProducts((prev) =>
+                prev.map((p) =>
+                    p.id === pData.id
+                        ? { ...p, ...pData, stockQuantity: pData.stockQuantity ?? p.stockQuantity }
+                        : p
+                )
+            );
+            // Refetch to stay in sync with database backend
+            handleSubmit();
             showToast('Changes saved successfully.');
         } else {
+            handleSubmit();
             showToast('Product created successfully.');
         }
     };
