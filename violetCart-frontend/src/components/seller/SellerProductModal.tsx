@@ -22,10 +22,9 @@ export const SellerProductModal: React.FC<SellerProductModalProps> = ({
 
     const {
         addForm: { register, setValue, watch, reset, getValues, formState: { errors, isSubmitting } },
-        handleAddSubmit,
+        handleProductSubmit,
         serverError,
     } = useProductManagement(() => {
-        // Emit updated product data to parent before closing
         const currentValues = getValues();
         onSave?.({
             id: product?.id,
@@ -40,10 +39,10 @@ export const SellerProductModal: React.FC<SellerProductModalProps> = ({
 
     const isEditing = product !== null;
 
-    // Populate or reset form when modal opens or product changes
     useEffect(() => {
         if (product) {
             reset({
+                id: String(product.id),
                 productName: product.productName,
                 price: product.price.toString(),
                 stocksLeft: product.stockQuantity.toString(),
@@ -51,11 +50,12 @@ export const SellerProductModal: React.FC<SellerProductModalProps> = ({
                 description: product.description,
             });
 
-            // Supply a dummy File object so strict Zod validation passes when editing without re-uploading an image
+            // Supply dummy File object ONLY when editing to bypass required file validation
             const dummyFile = new File([new Uint8Array(1)], "existing_image.jpg", { type: "image/jpeg" });
             setValue('imageFile', dummyFile);
         } else {
             reset({
+                id: '',
                 productName: '',
                 price: '',
                 stocksLeft: '',
@@ -63,19 +63,23 @@ export const SellerProductModal: React.FC<SellerProductModalProps> = ({
                 description: '',
                 imageFile: undefined,
             });
+            if (fileInputRef.current) {
+                fileInputRef.current.value = '';
+            }
         }
     }, [product, isOpen, reset, setValue]);
 
-    // Watch image file input in real time
     const imageFile = watch('imageFile');
 
-    // Derive object URL directly from watched file if user uploaded a new one
-    const imagePreview = imageFile instanceof File && imageFile.name !== "existing_image.jpg"
+    // Generate local Object URL whenever a genuine file is picked from the file explorer
+    const localImagePreview = imageFile instanceof File && imageFile.name !== "existing_image.jpg"
         ? URL.createObjectURL(imageFile)
         : '';
 
-    // Show newly picked image preview first, fallback to existing product image URL
-    const displayImage = imagePreview || (isEditing ? product?.imageUrl : '');
+    // In Add mode, display strictly the local file chosen. In Edit mode, fallback to backend imageUrl if unmodified.
+    const displayImage = isEditing
+        ? (localImagePreview || product?.imageUrl)
+        : localImagePreview;
 
     if (!isOpen) return null;
 
@@ -111,12 +115,14 @@ export const SellerProductModal: React.FC<SellerProductModalProps> = ({
                     <button onClick={onClose} className="w-7 h-7 rounded-lg flex items-center justify-center text-lg leading-none" style={{ background: 'var(--color-surface-2)', color: 'var(--color-muted)' }}>×</button>
                 </div>
 
-                <form onSubmit={handleAddSubmit} className="p-6 overflow-y-auto flex flex-col gap-4">
+                <form onSubmit={handleProductSubmit} className="p-6 overflow-y-auto flex flex-col gap-4">
                     {serverError && (
                         <div className="p-3 text-xs rounded-xl bg-red-500/10 border border-red-500/20 text-red-500">
                             {serverError}
                         </div>
                     )}
+
+                    <input type="hidden" {...register('id')} />
 
                     {/* Image Upload Field */}
                     <div>

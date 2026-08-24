@@ -15,7 +15,9 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class AddProductRequest {
+public class ProductRequest {
+
+    private Long id;
 
     @NotNull(message = "Image file is required")
     private MultipartFile imageFile;

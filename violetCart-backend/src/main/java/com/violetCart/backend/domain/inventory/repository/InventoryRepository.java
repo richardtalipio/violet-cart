@@ -6,6 +6,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 public interface InventoryRepository extends JpaRepository<Inventory, Long> {
 
@@ -87,4 +89,6 @@ public interface InventoryRepository extends JpaRepository<Inventory, Long> {
         VALUES (:productId, :availableStock, 0, 0)
         """, nativeQuery = true)
     void insertInitialInventory(@Param("productId") Long productId, @Param("availableStock") Integer availableStock);
+
+    Optional<Inventory> findByProductId(Long productId);
 }

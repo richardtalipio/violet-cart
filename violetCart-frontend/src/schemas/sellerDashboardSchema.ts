@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 export const addProductSchema = z.object({
+    id: z.string().optional(),
     imageFile: z
         .instanceof(File, { message: 'Image file is required' })
         .refine((file) => file.size > 0, 'Image file cannot be empty')

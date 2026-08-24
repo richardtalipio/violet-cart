@@ -7,6 +7,13 @@ export const useSecureImage = (src: string) => {
     const [error, setError] = useState<Error | null>(null);
 
     useEffect(() => {
+        if (!src || src.startsWith('blob:') || src.startsWith('data:')) {
+            setLoading(false);
+            return;
+        }
+    }, [src]);
+
+    useEffect(() => {
         let objectUrl = '';
         let isMounted = true;
 

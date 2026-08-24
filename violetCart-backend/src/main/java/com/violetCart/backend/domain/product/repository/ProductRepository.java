@@ -11,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpecificationExecutor<Product> {
@@ -21,5 +22,9 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     // If categories should only belong to the authenticated seller's store:
     @Query("SELECT DISTINCT p.category FROM Product p WHERE p.storeProfile.id = :storeProfileId AND p.category IS NOT NULL ORDER BY p.category ASC")
     List<String> findDistinctCategoriesByStoreProfileId(@Param("storeProfileId") Long storeProfileId);
+
+    Optional<Product> findByIdAndStoreProfileId(Long id, Long storeProfileId);
+
+
 
 }

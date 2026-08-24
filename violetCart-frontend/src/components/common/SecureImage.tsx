@@ -6,7 +6,16 @@ interface SecureImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
 }
 
 export const SecureImage: React.FC<SecureImageProps> = ({ src, alt, ...props }) => {
-    const { imageSrc, loading, error } = useSecureImage(src);
+
+    const isLocalUrl = src.startsWith('blob:') || src.startsWith('data:') || src.startsWith('/');
+
+
+    const { imageSrc, loading, error } = useSecureImage(isLocalUrl ? '' : src);
+
+
+    if (isLocalUrl) {
+        return <img src={src} alt={alt} {...props} />;
+    }
 
     if (loading) {
         return (

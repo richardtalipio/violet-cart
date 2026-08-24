@@ -76,11 +76,15 @@ export const useProductManagement = (onSuccessCallback?: () => void) => {
         }
     }, []);
 
-    const onSubmitAdd = async (data: AddProductFormData) => {
+    const onSubmitProduct = async (data: AddProductFormData) => {
         try {
             setServerError(null);
-
-            await productService.addProduct(data);
+            console.log(data);
+            if (data.id) {
+                await productService.editProduct(data);
+            } else {
+                await productService.addProduct(data);
+            }
 
             addForm.reset();
 
@@ -95,7 +99,7 @@ export const useProductManagement = (onSuccessCallback?: () => void) => {
             } else if (error.request) {
                 setServerError('Unable to connect to the backend server. Is Spring Boot running?');
             } else {
-                setServerError('An unexpected error occurred while adding the product.');
+                setServerError('An unexpected error occurred while saving the product.');
             }
         }
     };
@@ -116,7 +120,7 @@ export const useProductManagement = (onSuccessCallback?: () => void) => {
 
         // Add
         addForm,
-        handleAddSubmit: addForm.handleSubmit(onSubmitAdd),
+        handleProductSubmit: addForm.handleSubmit(onSubmitProduct),
         serverError,
     };
 };

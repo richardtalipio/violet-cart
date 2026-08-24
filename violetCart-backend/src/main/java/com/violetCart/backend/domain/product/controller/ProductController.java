@@ -1,7 +1,7 @@
 package com.violetCart.backend.domain.product.controller;
 
 import com.violetCart.backend.common.response.ApiResponse;
-import com.violetCart.backend.domain.product.dto.AddProductRequest;
+import com.violetCart.backend.domain.product.dto.ProductRequest;
 import com.violetCart.backend.domain.product.dto.ProductSearchCriteria;
 import com.violetCart.backend.domain.product.dto.RetrieveProductResponse;
 import com.violetCart.backend.domain.product.entity.Product;
@@ -41,7 +41,7 @@ public class ProductController {
     public ResponseEntity<ApiResponse<RetrieveProductResponse>> addProduct(
             @RequestParam("imageFile") MultipartFile imageFile,
             @RequestParam("productName") String productName,
-            @RequestParam("price") java.math.BigDecimal price,
+            @RequestParam("price") BigDecimal price,
             @RequestParam("stocksLeft") int stocksLeft,
             @RequestParam("category") String category,
             @RequestParam("description") String description,
@@ -55,7 +55,7 @@ public class ProductController {
         }
 
         // Build request object
-        AddProductRequest request = AddProductRequest.builder()
+        ProductRequest request = ProductRequest.builder()
                 .imageFile(imageFile)
                 .productName(productName)
                 .price(price)
@@ -94,5 +94,41 @@ public class ProductController {
         }
         List<String> categories = productService.retrieveAllCategories(storeProfileId);
         return ResponseEntity.ok(ApiResponse.success("Categories retrieved successfully", categories));
+    }
+
+    @PreAuthorize("hasRole('SELLER')")
+    @PutMapping(value = "/{id}", consumes = "multipart/form-data")
+    public ResponseEntity<ApiResponse<RetrieveProductResponse>> updateProduct(
+            @PathVariable("id") Long productId,
+            @RequestParam("imageFile") MultipartFile imageFile,
+            @RequestParam("productName") String productName,
+            @RequestParam("price") BigDecimal price,
+            @RequestParam("stocksLeft") int stocksLeft,
+            @RequestParam("category") String category,
+            @RequestParam("description") String description,
+            @AuthenticationPrincipal CustomUserDetails currentUser
+    ) {
+
+        if (currentUser.getStoreProfileId() == null) {
+            return ResponseEntity
+                    .status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.error("User does not have an active store profile"));
+        }
+
+        ProductRequest request = ProductRequest.builder()
+                .imageFile(imageFile)
+                .productName(productName)
+                .price(price)
+                .stocksLeft(stocksLeft)
+                .category(category)
+                .description(description)
+                .id(productId)
+                .build();
+
+        Product savedProduct = productService.editProduct(request, currentUser.getStoreProfileId(), currentUser.getId());
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(ApiResponse.success("Product added successfully", savedProduct.toRetrieveProductResponse(stocksLeft)));
+
     }
 }

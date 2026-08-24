@@ -4,7 +4,7 @@ import com.violetCart.backend.domain.image.service.ImageStorageService;
 import com.violetCart.backend.domain.inventory.entity.Inventory;
 import com.violetCart.backend.domain.inventory.repository.InventoryRepository;
 import com.violetCart.backend.domain.inventory.service.InventoryService;
-import com.violetCart.backend.domain.product.dto.AddProductRequest;
+import com.violetCart.backend.domain.product.dto.ProductRequest;
 import com.violetCart.backend.domain.product.dto.ProductSearchCriteria;
 import com.violetCart.backend.domain.product.dto.RetrieveProductResponse;
 import com.violetCart.backend.domain.product.entity.Product;
@@ -17,6 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
@@ -35,12 +36,12 @@ public class ProductServiceImpl implements ProductService {
     private final InventoryRepository inventoryRepository;
 
     @Override
-    public Product addProduct(AddProductRequest request, Long storeProfileId, Long userAccountId) {
-        // 1. Fetch store profile
+    public Product addProduct(ProductRequest request, Long storeProfileId, Long userAccountId) {
+
         StoreProfile storeProfile = storeProfileRepository.findById(storeProfileId)
                 .orElseThrow(() -> new IllegalArgumentException("Store profile not found with id: " + storeProfileId));
 
-        // 2. Build product metadata (stock is managed separately in inventory table)
+
         Product product = Product.builder()
                 .productName(request.getProductName())
                 .description(request.getDescription())
@@ -50,13 +51,10 @@ public class ProductServiceImpl implements ProductService {
                 .imageUrl("") // Placeholder until image is saved
                 .build();
 
-        // Save product to obtain generated ID
         product = productRepository.save(product);
 
-        // 3. Initialize Inventory entry via InventoryService
         inventoryService.initializeStock(product.getId(), request.getStocksLeft());
 
-        // 4. Save Image
         try {
             String imageFilename = imageStorageService.saveImage(
                     request.getImageFile(),
@@ -124,5 +122,41 @@ public class ProductServiceImpl implements ProductService {
         } else {
             return productRepository.findDistinctCategoriesByStoreProfileId(storeProfileId);
         }
+    }
+
+    @Override
+    @Transactional
+    public Product editProduct(ProductRequest request, Long storeProfileId, Long userAccountId) {
+        Product product = productRepository.findByIdAndStoreProfileId(request.getId(), storeProfileId)
+                .orElseThrow(() -> new IllegalArgumentException("Product not found with id: " + request.getId()));
+
+        product.setProductName(request.getProductName());
+        product.setDescription(request.getDescription());
+        product.setPrice(request.getPrice());
+        product.setCategory(request.getCategory());
+
+        MultipartFile imageFile = request.getImageFile();
+        if (imageFile != null && !imageFile.isEmpty() && !"existing_image.jpg".equals(imageFile.getOriginalFilename())) {
+            try {
+                String newImageFilename = imageStorageService.saveImage(
+                        imageFile,
+                        product.getId(),
+                        userAccountId,
+                        storeProfileId
+                );
+                product.setImageUrl(newImageFilename);
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to save product image: " + e.getMessage(), e);
+            }
+        }
+
+        // 4. Update absolute inventory stock directly instead of calling restock (additive delta)
+        Inventory inventory = inventoryRepository.findByProductId(product.getId())
+                .orElseThrow(() -> new IllegalArgumentException("Inventory record not found for product id: " + product.getId()));
+
+        inventory.setAvailableStock(request.getStocksLeft());
+
+        // Managed entities automatically flush updates at transaction commit via Hibernate dirty checking
+        return product;
     }
 }
