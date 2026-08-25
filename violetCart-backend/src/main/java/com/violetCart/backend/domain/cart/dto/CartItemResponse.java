@@ -12,6 +12,7 @@ public class CartItemResponse {
 
     private String id;
     private Long productId;
+    private Long storeProfileId;
     private String productName;
     private String imageUrl;
     private BigDecimal price;

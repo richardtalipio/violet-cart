@@ -1,6 +1,8 @@
 import { useState, useCallback } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { orderService } from '@/api/orderService';
-import type { CheckoutFormData } from '@/schemas/orderSchema';
+import { type CheckoutFormData, type OrderSearchFormData, type OrderSearchFormInput, orderSearchSchema } from '@/schemas/orderSchema';
 import type { CheckoutResponse, OrderResponse } from '@/types/orderTypes';
 import type { ApiResponse } from '@/types/common';
 import { AxiosError } from 'axios';
@@ -12,9 +14,11 @@ interface UseOrderManagementReturn {
     userOrders: OrderResponse[] | null;
     selectedOrder: OrderResponse | null;
     processCheckout: (data: CheckoutFormData) => Promise<CheckoutResponse | null>;
-    getUserOrders: () => Promise<OrderResponse[] | null>;
+    getUserOrders: (criteria?: OrderSearchFormData) => Promise<OrderResponse[] | null>;
     getOrderById: (orderId: string) => Promise<OrderResponse | null>;
     resetOrderState: () => void;
+    searchForm: any;
+    handleSearchSubmit: () => void;
 }
 
 export const useOrderManagement = (): UseOrderManagementReturn => {
@@ -23,6 +27,16 @@ export const useOrderManagement = (): UseOrderManagementReturn => {
     const [checkoutResult, setCheckoutResult] = useState<CheckoutResponse | null>(null);
     const [userOrders, setUserOrders] = useState<OrderResponse[] | null>(null);
     const [selectedOrder, setSelectedOrder] = useState<OrderResponse | null>(null);
+
+    const searchForm = useForm<OrderSearchFormInput, any, OrderSearchFormData>({
+        resolver: zodResolver(orderSearchSchema),
+        defaultValues: {
+            customerName: '',
+            page: 0,
+            size: 10,
+            sort: 'orderDate,DESC',
+        },
+    });
 
     const resetOrderState = useCallback(() => {
         setIsLoading(false);
@@ -64,16 +78,19 @@ export const useOrderManagement = (): UseOrderManagementReturn => {
         }
     };
 
-    const getUserOrders = async (): Promise<OrderResponse[] | null> => {
+    const getUserOrders = useCallback(async (criteria?: OrderSearchFormData): Promise<OrderResponse[] | null> => {
         setIsLoading(true);
         setError(null);
 
         try {
-            const response = await orderService.getUserOrders();
+            const response = await orderService.getUserOrders(criteria);
 
             if (response.success && response.data) {
-                setUserOrders(response.data);
-                return response.data;
+                // Assuming backend returns Page<OrderResponse>
+                // Adjusting based on existing getUserOrders implementation which returns OrderResponse[]
+                // Need to verify if orderService.getUserOrders accepts criteria
+                setUserOrders(response.data.content ?? response.data);
+                return response.data.content ?? response.data;
             } else {
                 const errorMessage = response.message || 'Failed to fetch user orders.';
                 setError(errorMessage);
@@ -94,7 +111,13 @@ export const useOrderManagement = (): UseOrderManagementReturn => {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [orderService]);
+
+    const onSubmitSearch = useCallback(async (data: OrderSearchFormData) => {
+        await getUserOrders(data);
+    }, [getUserOrders]);
+
+    const handleSearchSubmit = searchForm.handleSubmit(onSubmitSearch);
 
     const getOrderById = async (orderId: string): Promise<OrderResponse | null> => {
         setIsLoading(true);
@@ -138,5 +161,7 @@ export const useOrderManagement = (): UseOrderManagementReturn => {
         getUserOrders,
         getOrderById,
         resetOrderState,
+        searchForm,
+        handleSearchSubmit,
     };
 };

@@ -37,7 +37,8 @@ public class CartServiceImpl implements CartService {
                         .price(item.getProduct().getPrice())
                         .quantity(item.getQuantity())
                         .subtotal(computeSubtotal(item.getQuantity(), item.getProduct().getPrice()))
-                        .build()) // Removed semicolon here
+                        .storeProfileId(item.getStoreProfile().getId())
+                        .build())
                 .collect(Collectors.toList());
     }
 
@@ -59,19 +60,20 @@ public class CartServiceImpl implements CartService {
                         .userAccount(user)
                         .product(product)
                         .quantity(request.getQuantity())
+                        .storeProfile(product.getStoreProfile())
                         .build());
 
         CartItem saved = cartItemRepository.save(cartItem);
 
-        CartItemResponse cartItemResponse = CartItemResponse.builder()
+        return CartItemResponse.builder()
                 .id(saved.getId())
                 .productId(product.getId())
                 .productName(product.getProductName())
                 .imageUrl(product.getImageUrl())
                 .price(product.getPrice())
                 .quantity(saved.getQuantity())
+                .storeProfileId(product.getStoreProfile().getId())
                 .subtotal(computeSubtotal(saved.getQuantity(), product.getPrice() )).build();
-        return cartItemResponse;
     }
 
     @Transactional

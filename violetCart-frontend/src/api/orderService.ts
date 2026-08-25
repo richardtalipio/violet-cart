@@ -1,6 +1,6 @@
 import { api } from './axios';
 import type { ApiResponse } from '@/types/common';
-import type { CheckoutFormData } from '@/schemas/orderSchema';
+import type { CheckoutFormData, OrderSearchFormData } from '@/schemas/orderSchema';
 import type { CheckoutResponse, OrderResponse } from '@/types/orderTypes';
 
 export const orderService = {
@@ -14,8 +14,12 @@ export const orderService = {
         return response.data;
     },
 
-    getUserOrders: async (): Promise<ApiResponse<OrderResponse[]>> => {
-        const response = await api.get<ApiResponse<OrderResponse[]>>('/orders');
+    getUserOrders: async (
+        criteria?: OrderSearchFormData
+    ): Promise<ApiResponse<any>> => {
+        const response = await api.get<ApiResponse<any>>('/orders', {
+            params: criteria,
+        });
         return response.data;
     },
 

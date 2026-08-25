@@ -1,15 +1,17 @@
 package com.violetCart.backend.domain.order.service;
 
 import com.violetCart.backend.domain.inventory.repository.InventoryRepository;
-import com.violetCart.backend.domain.order.dto.CheckoutRequest;
-import com.violetCart.backend.domain.order.dto.CheckoutResponse;
-import com.violetCart.backend.domain.order.dto.OrderResponse;
-import com.violetCart.backend.domain.order.dto.OrderStatus;
-import com.violetCart.backend.domain.order.dto.PaymentMethod;
+import com.violetCart.backend.domain.order.dto.*;
 import com.violetCart.backend.domain.order.entity.Order;
 import com.violetCart.backend.domain.order.entity.OrderItem;
 import com.violetCart.backend.domain.order.repository.OrderRepository;
+import com.violetCart.backend.domain.order.repository.OrderSpecification;
+import com.violetCart.backend.domain.user.entity.CustomUserDetails;
+import com.violetCart.backend.domain.user.entity.Role;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -48,14 +50,6 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<OrderResponse> getOrdersByUserAccountId(Long userAccountId) {
-        return orderRepository.findByUserAccountIdOrderByOrderDateDesc(userAccountId).stream()
-                .map(this::mapToOrderResponse)
-                .toList();
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public OrderResponse getOrderById(String orderId, Long userAccountId) {
         Order order = orderRepository.findByIdAndUserAccountId(orderId, userAccountId)
                 .orElseThrow(() -> new IllegalArgumentException(
@@ -63,6 +57,36 @@ public class OrderServiceImpl implements OrderService {
                 ));
 
         return mapToOrderResponse(order);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<OrderResponse> getOrders(
+            OrderSearchCriteria criteria,
+            Pageable pageable,
+            CustomUserDetails customUserDetails
+    ) {
+        Long sellerStoreProfileId = null;
+        Long customerUserAccountId = null;
+
+        // Determine context role from CustomUserDetails
+        if (customUserDetails.getRole().equals(Role.ROLE_SELLER)) {
+            sellerStoreProfileId = customUserDetails.getStoreProfileId();
+        } else if  (customUserDetails.getRole().equals(Role.ROLE_CUSTOMER)){
+            customerUserAccountId = customUserDetails.getId();
+        }
+
+        // Build specification combining security constraints & search filters
+        Specification<Order> spec = OrderSpecification.build(
+                criteria,
+                sellerStoreProfileId,
+                customerUserAccountId
+        );
+
+        // Fetch paginated entities and map to response DTOs
+        Page<Order> orderPage = orderRepository.findAll(spec, pageable);
+
+        return orderPage.map(this::mapToOrderResponse);
     }
 
     private void reserveOrDeductInventory(List<CheckoutRequest.CheckoutItemDto> items, PaymentMethod paymentMethod) {
@@ -110,6 +134,7 @@ public class OrderServiceImpl implements OrderService {
                         .imageUrl(itemDto.getImageUrl())
                         .price(itemDto.getPrice())
                         .quantity(itemDto.getQuantity())
+                        .storeProfileId(itemDto.getStoreProfileId())
                         .build())
                 .toList();
 
@@ -161,5 +186,31 @@ public class OrderServiceImpl implements OrderService {
                 .total(order.getTotal())
                 .items(items)
                 .build();
+    }
+
+    @Override
+    @Transactional
+    public OrderResponse updateOrderStatus(String orderId, OrderStatus newStatus, CustomUserDetails customUserDetails) {
+        if (!Role.ROLE_SELLER.equals(customUserDetails.getRole())) {
+            throw new IllegalStateException("Only sellers are authorized to update order status.");
+        }
+
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("Order not found with ID: " + orderId));
+
+        Long sellerStoreProfileId = customUserDetails.getStoreProfileId();
+
+        // Verify at least one item in the order belongs to this seller's store
+        boolean belongsToSeller = order.getOrderItems().stream()
+                .anyMatch(item -> sellerStoreProfileId != null && sellerStoreProfileId.equals(item.getStoreProfileId()));
+
+        if (!belongsToSeller) {
+            throw new IllegalStateException("Unauthorized: Order does not contain products from your store.");
+        }
+
+        order.setOrderStatus(newStatus);
+        Order updatedOrder = orderRepository.save(order);
+
+        return mapToOrderResponse(updatedOrder);
     }
 }

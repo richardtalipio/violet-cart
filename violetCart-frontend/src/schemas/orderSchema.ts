@@ -37,6 +37,7 @@ export const shippingAddressSchema = z.object({
 export const checkoutItemSchema = z.object({
     productId: z.number().positive('Invalid product ID'),
     productName: z.string().min(1, 'Product name is required'),
+    storeProfileId: z.number().positive('Invalid store profile'),
     imageUrl: z.string().nullable().optional(),
     price: z.number().positive('Price must be greater than 0'),
     quantity: z.number().int().min(1, 'Quantity must be at least 1'),
@@ -54,5 +55,16 @@ export const checkoutSchema = z.object({
 
 export type PaymentMethod = z.infer<typeof paymentMethodSchema>;
 export type ShippingAddressFormData = z.infer<typeof shippingAddressSchema>;
+export const orderSearchSchema = z.object({
+    customerName: z.string().optional(),
+    orderStatus: z.string().optional(),
+    userAccountId: z.number().optional(),
+    page: z.number().int().min(0).optional().default(0),
+    size: z.number().int().min(1).optional().default(10),
+    sort: z.string().optional().default('orderDate,DESC'),
+});
+
+export type OrderSearchFormData = z.infer<typeof orderSearchSchema>;
+export type OrderSearchFormInput = z.input<typeof orderSearchSchema>;
 export type CheckoutItemFormData = z.infer<typeof checkoutItemSchema>;
 export type CheckoutFormData = z.infer<typeof checkoutSchema>;

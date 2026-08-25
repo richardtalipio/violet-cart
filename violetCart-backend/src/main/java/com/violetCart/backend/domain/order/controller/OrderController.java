@@ -1,15 +1,23 @@
 package com.violetCart.backend.domain.order.controller;
 
 import com.violetCart.backend.common.response.ApiResponse;
-import com.violetCart.backend.domain.order.dto.CheckoutRequest;
-import com.violetCart.backend.domain.order.dto.CheckoutResponse;
-import com.violetCart.backend.domain.order.dto.OrderResponse;
+import com.violetCart.backend.domain.order.dto.*;
 import com.violetCart.backend.domain.order.service.OrderService;
+import com.violetCart.backend.domain.product.dto.RetrieveProductResponse;
 import com.violetCart.backend.domain.user.entity.CustomUserDetails;
+import com.violetCart.backend.domain.user.entity.Role;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -36,11 +44,14 @@ public class OrderController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<OrderResponse>>> getUserOrders(
+    public ResponseEntity<ApiResponse<Page<OrderResponse>>> getOrders(
+            @ModelAttribute OrderSearchCriteria criteria,
+            @PageableDefault(size = 10, sort = "orderDate", direction = Sort.Direction.ASC) Pageable pageable,
             @AuthenticationPrincipal CustomUserDetails currentUser) {
-        List<OrderResponse> orders = orderService.getOrdersByUserAccountId(currentUser.getId());
 
-        ApiResponse<List<OrderResponse>> apiResponse = ApiResponse.success(
+        Page<OrderResponse> orders = orderService.getOrders(criteria, pageable, currentUser);
+
+        ApiResponse<Page<OrderResponse>> apiResponse = ApiResponse.success(
                 "Orders retrieved successfully",
                 orders
         );
@@ -61,4 +72,22 @@ public class OrderController {
 
         return ResponseEntity.ok(apiResponse);
     }
+
+    @PatchMapping("/{orderId}/status")
+    @PreAuthorize("hasRole('SELLER')")
+    public ResponseEntity<ApiResponse<OrderResponse>> updateOrderStatus(
+            @PathVariable String orderId,
+            @Valid @RequestBody UpdateOrderStatusRequest request,
+            @AuthenticationPrincipal CustomUserDetails currentUser) {
+
+        OrderResponse response = orderService.updateOrderStatus(orderId, request.getStatus(), currentUser);
+
+        ApiResponse<OrderResponse> apiResponse = ApiResponse.success(
+                "Order status updated successfully",
+                response
+        );
+
+        return ResponseEntity.ok(apiResponse);
+    }
+
 }

@@ -6,6 +6,7 @@ export interface AddToCartRequest {
 export interface CartItemResponse {
     id: string;
     productId: number;
+    storeProfileId: number;
     productName: string;
     imageUrl: string;
     price: number;

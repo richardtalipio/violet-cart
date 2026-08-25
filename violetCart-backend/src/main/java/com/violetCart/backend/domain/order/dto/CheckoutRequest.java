@@ -24,6 +24,7 @@ public class CheckoutRequest {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class CheckoutItemDto {
+        private Long storeProfileId;
         private Long productId;
         private String productName;
         private String imageUrl;

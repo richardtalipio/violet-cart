@@ -22,8 +22,9 @@ public class CustomUserDetails implements UserDetails {
 
     private final Long id;
     private final String email;
-    private final String password; // required by UserDetails
-    private final Long storeProfileId; // null when user has no store profile
+    private final String password;
+    private final Long storeProfileId;
+    private final Role role;
     private final Collection<? extends GrantedAuthority> authorities;
 
     // --- UserDetails implementation ---
@@ -82,6 +83,7 @@ public class CustomUserDetails implements UserDetails {
                 .password(user.getPassword())
                 .storeProfileId(profileId)
                 .authorities(user.getAuthorities())
+                .role(user.getRole())
                 .build();
     }
 }

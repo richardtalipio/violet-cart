@@ -206,6 +206,7 @@ export const Customer: React.FC = () => {
             shippingFee: shippingFee,
             items: cartItems.map((item) => ({
                 productId: Number(item.productId),
+                storeProfileId: item.storeProfileId,
                 productName: item.productName,
                 imageUrl: item.imageUrl || '',
                 price: item.price,
@@ -217,10 +218,10 @@ export const Customer: React.FC = () => {
 
         if (result) {
             // If PayMongo redirect URL is returned, handle redirect
-            if (result.checkoutUrl) {
-                window.location.href = result.checkoutUrl;
-                return;
-            }
+            // if (result.checkoutUrl) {
+            //     window.location.href = result.checkoutUrl;
+            //     return;
+            // }
 
             const newOrder: Order = {
                 id: result.orderId,
@@ -230,6 +231,7 @@ export const Customer: React.FC = () => {
                 items: cartItems.map((item, idx) => ({
                     id: `item-${Date.now()}-${idx}`,
                     productName: item.productName,
+                    storeProfileId: item.storeProfileId,
                     image: item.imageUrl || '',
                     price: item.price,
                     priceFormatted: `₱${item.price.toLocaleString()}`,

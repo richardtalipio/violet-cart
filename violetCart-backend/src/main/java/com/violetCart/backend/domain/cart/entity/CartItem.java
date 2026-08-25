@@ -1,6 +1,7 @@
 package com.violetCart.backend.domain.cart.entity;
 
 import com.violetCart.backend.domain.product.entity.Product;
+import com.violetCart.backend.domain.user.entity.StoreProfile;
 import com.violetCart.backend.domain.user.entity.UserAccount;
 import jakarta.persistence.*;
 import lombok.*;
@@ -45,4 +46,8 @@ public class CartItem {
     @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "store_profile_id", nullable = false)
+    private StoreProfile storeProfile;
 }

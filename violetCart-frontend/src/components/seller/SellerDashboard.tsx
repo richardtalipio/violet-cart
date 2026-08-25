@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useOrderManagement } from '@/hooks/useOrderManagement';
+import { type OrderResponse } from '@/types/orderTypes';
 import { type Product, type Order, type OrderStatus } from '../common/types';
 import { ProductGrid } from './ProductGrid';
 import { SellerProductModal } from './SellerProductModal';
@@ -8,7 +10,6 @@ import { useAuthStore } from "@/store/useAuthStore.ts";
 import { useNavigate } from "react-router-dom";
 import { useProductManagement } from '@/hooks/useProductManagement';
 import { useStoreProfile } from "@/hooks/useStoreProfile.ts";
-import {MOCK_ORDERS} from "@/components/storefront/mockData.ts";
 
 const PAGE_SIZE = 4;
 
@@ -32,6 +33,11 @@ export const SellerDashboard: React.FC = () => {
         handleSearchSubmit: handleSubmit,
     } = useProductManagement();
 
+    const {
+        userOrders,
+        getUserOrders,
+    } = useOrderManagement();
+
     const isLoading = userLoading || productLoading;
 
     const [selectedCategory, setSelectedCategory] = useState('All');
@@ -39,7 +45,49 @@ export const SellerDashboard: React.FC = () => {
 
     const [isProductModalOpen, setIsProductModalOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-    const [orders, setOrders] = useState<Order[]>(MOCK_ORDERS);
+    const [orders, setOrders] = useState<Order[]>([]);
+
+    const mapStatus = (status: string): OrderStatus => {
+        switch (status) {
+            case 'PENDING_PAYMENT': return 'Pending Payment';
+            case 'PREPARING': return 'Preparing';
+            case 'READY_FOR_SHIPMENT': return 'Ready for Shipment';
+            case 'IN_TRANSIT': return 'In Transit';
+            case 'OUT_FOR_DELIVERY': return 'Out for Delivery';
+            case 'DELIVERED': return 'Delivered';
+            case 'CANCELLED': return 'Cancelled';
+            case 'EXPIRED': return 'Expired';
+            default: return 'Pending Payment';
+        }
+    };
+
+    const mapOrderResponseToOrder = (o: OrderResponse): Order => ({
+        id: o.id,
+        customerName: o.customerName,
+        orderDate: o.orderDate,
+        status: mapStatus(o.orderStatus),
+        items: o.items.map(item => ({
+            id: item.id,
+            productName: item.productName,
+            image: item.imageUrl,
+            price: item.price,
+            priceFormatted: `₱${item.price.toLocaleString()}`,
+            quantity: item.quantity
+        })),
+        shippingAddress: o.shippingAddress,
+        breakdown: {
+            subtotal: o.subtotal,
+            shippingFee: o.shippingFee,
+            discount: 0,
+            total: o.total
+        }
+    });
+
+    useEffect(() => {
+        if (userOrders) {
+            setOrders(userOrders.map(mapOrderResponseToOrder));
+        }
+    }, [userOrders]);
 
     const [toastMessage, setToastMessage] = useState<string | null>(null);
     const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
@@ -53,7 +101,8 @@ export const SellerDashboard: React.FC = () => {
     // Trigger initial fetch on mount
     useEffect(() => {
         handleSubmit();
-    }, [handleSubmit]);
+        getUserOrders();
+    }, [handleSubmit, getUserOrders]);
 
     const onLogout = () => {
         logout();
