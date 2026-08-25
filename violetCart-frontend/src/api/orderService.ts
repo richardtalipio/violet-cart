@@ -1,7 +1,7 @@
 import { api } from './axios';
 import type { ApiResponse } from '@/types/common';
 import type { CheckoutFormData, OrderSearchFormData } from '@/schemas/orderSchema';
-import type { CheckoutResponse, OrderResponse } from '@/types/orderTypes';
+import type { CheckoutResponse, OrderResponse, OrderStatus } from '@/types/orderTypes';
 
 export const orderService = {
     checkout: async (
@@ -28,6 +28,17 @@ export const orderService = {
     ): Promise<ApiResponse<OrderResponse>> => {
         const response = await api.get<ApiResponse<OrderResponse>>(
             `/orders/${orderId}`
+        );
+        return response.data;
+    },
+
+    updateOrderStatus: async (
+        orderId: string,
+        status: OrderStatus
+    ): Promise<ApiResponse<OrderResponse>> => {
+        const response = await api.patch<ApiResponse<OrderResponse>>(
+            `/orders/${orderId}/status`,
+            { status }
         );
         return response.data;
     },

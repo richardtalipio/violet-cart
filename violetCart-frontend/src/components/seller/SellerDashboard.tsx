@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useOrderManagement } from '@/hooks/useOrderManagement';
-import { type OrderResponse } from '@/types/orderTypes';
+import { type OrderResponse, OrderStatus as BackendOrderStatus } from '@/types/orderTypes';
 import { type Product, type Order, type OrderStatus } from '../common/types';
 import { ProductGrid } from './ProductGrid';
 import { SellerProductModal } from './SellerProductModal';
@@ -36,6 +36,7 @@ export const SellerDashboard: React.FC = () => {
     const {
         userOrders,
         getUserOrders,
+        updateOrderStatus,
     } = useOrderManagement();
 
     const isLoading = userLoading || productLoading;
@@ -58,6 +59,20 @@ export const SellerDashboard: React.FC = () => {
             case 'CANCELLED': return 'Cancelled';
             case 'EXPIRED': return 'Expired';
             default: return 'Pending Payment';
+        }
+    };
+
+    const mapToBackendStatus = (status: OrderStatus): BackendOrderStatus => {
+        switch (status) {
+            case 'Pending Payment': return 'PENDING_PAYMENT';
+            case 'Preparing': return 'PREPARING';
+            case 'Ready for Shipment': return 'READY_FOR_SHIPMENT';
+            case 'In Transit': return 'IN_TRANSIT';
+            case 'Out for Delivery': return 'OUT_FOR_DELIVERY';
+            case 'Delivered': return 'DELIVERED';
+            case 'Cancelled': return 'CANCELLED';
+            case 'Expired': return 'EXPIRED';
+            default: return 'PENDING_PAYMENT';
         }
     };
 
@@ -142,13 +157,22 @@ export const SellerDashboard: React.FC = () => {
         }
     };
 
-    const handleConfirmStatusChange = () => {
+    const handleConfirmStatusChange = async () => {
         if (pendingStatusChange) {
             const { order, newStatus } = pendingStatusChange;
-            setOrders((prev) =>
-                prev.map((o) => (o.id === order.id ? { ...o, status: newStatus } : o))
-            );
-            showToast(`Order ${order.id} status updated to "${newStatus}".`);
+
+            const backendStatus = mapToBackendStatus(newStatus);
+            const result = await updateOrderStatus(order.id, backendStatus);
+
+            if (result) {
+                // Optimistically update
+                setOrders((prev) =>
+                    prev.map((o) => (o.id === order.id ? { ...o, status: newStatus } : o))
+                );
+                showToast(`Order ${order.id} status updated to "${newStatus}".`);
+            } else {
+                showToast(`Failed to update Order ${order.id} status.`);
+            }
             setPendingStatusChange(null);
         }
     };

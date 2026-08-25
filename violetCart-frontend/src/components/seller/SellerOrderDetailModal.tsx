@@ -2,6 +2,7 @@ import React from 'react';
 import { type Order, type OrderStatus as UIOrderStatus } from '../common/types';
 import { OrderStatus as BackendOrderStatus } from '../../types/orderTypes';
 import { getStatusStyle } from './SellerOrdersTable';
+import {SecureImage} from "@/components/common/SecureImage.tsx";
 
 interface SellerOrderDetailModalProps {
     order: Order | null;
@@ -101,7 +102,7 @@ export const SellerOrderDetailModal: React.FC<SellerOrderDetailModalProps> = ({
                                     style={{ background: 'var(--color-surface-2)', borderColor: 'var(--color-border)' }}
                                 >
                                     <div className="flex items-center gap-3">
-                                        <img src={item.image} alt={item.productName} className="w-10 h-10 object-cover rounded-lg border" style={{ borderColor: 'var(--color-border)' }} />
+                                        <SecureImage src={item.image} alt={item.productName} className="w-10 h-10 object-cover rounded-lg border" style={{ borderColor: 'var(--color-border)' }} />
                                         <div>
                                             <p className="font-semibold">{item.productName}</p>
                                             <p className="text-[11px]" style={{ color: 'var(--color-muted)' }}>

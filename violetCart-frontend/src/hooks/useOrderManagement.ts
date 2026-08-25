@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { orderService } from '@/api/orderService';
 import { type CheckoutFormData, type OrderSearchFormData, type OrderSearchFormInput, orderSearchSchema } from '@/schemas/orderSchema';
-import type { CheckoutResponse, OrderResponse } from '@/types/orderTypes';
+import type { CheckoutResponse, OrderResponse, OrderStatus } from '@/types/orderTypes';
 import type { ApiResponse } from '@/types/common';
 import { AxiosError } from 'axios';
 
@@ -16,6 +16,7 @@ interface UseOrderManagementReturn {
     processCheckout: (data: CheckoutFormData) => Promise<CheckoutResponse | null>;
     getUserOrders: (criteria?: OrderSearchFormData) => Promise<OrderResponse[] | null>;
     getOrderById: (orderId: string) => Promise<OrderResponse | null>;
+    updateOrderStatus: (orderId: string, status: OrderStatus) => Promise<OrderResponse | null>;
     resetOrderState: () => void;
     searchForm: any;
     handleSearchSubmit: () => void;
@@ -118,6 +119,37 @@ export const useOrderManagement = (): UseOrderManagementReturn => {
     }, [getUserOrders]);
 
     const handleSearchSubmit = searchForm.handleSubmit(onSubmitSearch);
+    
+    const updateOrderStatus = async (orderId: string, status: OrderStatus): Promise<OrderResponse | null> => {
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            const response = await orderService.updateOrderStatus(orderId, status);
+
+            if (response.success && response.data) {
+                return response.data;
+            } else {
+                const errorMessage = response.message || 'Failed to update order status.';
+                setError(errorMessage);
+                return null;
+            }
+        } catch (err) {
+            let message = 'An unexpected error occurred while updating order status.';
+
+            if (err instanceof AxiosError && err.response?.data) {
+                const apiError = err.response.data as ApiResponse<unknown>;
+                message = apiError.message || message;
+            } else if (err instanceof Error) {
+                message = err.message;
+            }
+
+            setError(message);
+            return null;
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     const getOrderById = async (orderId: string): Promise<OrderResponse | null> => {
         setIsLoading(true);
@@ -160,6 +192,7 @@ export const useOrderManagement = (): UseOrderManagementReturn => {
         processCheckout,
         getUserOrders,
         getOrderById,
+        updateOrderStatus,
         resetOrderState,
         searchForm,
         handleSearchSubmit,
